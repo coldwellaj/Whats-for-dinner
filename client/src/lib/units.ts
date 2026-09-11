@@ -42,7 +42,30 @@ export const QUANTITY_OPTIONS: { label: string; value: number }[] = [
   { label: "10", value: 10 },
 ];
 
-/** Finds the preset quantity option matching a stored value, tolerant of floating-point rounding. */
-export function findQuantityLabel(value: number): string | undefined {
-  return QUANTITY_OPTIONS.find((opt) => Math.abs(opt.value - value) < 0.001)?.label;
+// Denominators checked smallest-first so the simplest matching fraction wins (e.g. 1/2 over 2/4).
+const FRACTION_DENOMINATORS = [2, 3, 4, 6, 8, 16];
+const FRACTION_TOLERANCE = 0.01;
+
+/**
+ * Formats a quantity as a mixed-number fraction (e.g. 1.5 -> "1 1/2"), falling back to a
+ * trimmed decimal when it doesn't land near a common cooking fraction. Used for both the
+ * fixed dropdown presets and scaled (halved/doubled) quantities that fall off that preset grid.
+ */
+export function formatQuantity(value: number): string {
+  const rounded = Math.round(value * 1e6) / 1e6;
+  const whole = Math.floor(rounded + 1e-9);
+  const frac = rounded - whole;
+
+  if (frac < 1e-6) return String(whole);
+
+  for (const denom of FRACTION_DENOMINATORS) {
+    const numer = Math.round(frac * denom);
+    if (numer <= 0 || numer >= denom) continue;
+    if (Math.abs(frac - numer / denom) < FRACTION_TOLERANCE) {
+      const fractionLabel = `${numer}/${denom}`;
+      return whole > 0 ? `${whole} ${fractionLabel}` : fractionLabel;
+    }
+  }
+
+  return String(Math.round(rounded * 100) / 100);
 }

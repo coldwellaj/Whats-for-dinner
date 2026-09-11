@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDeleteRecipe, useRecipe, useToggleFavorite } from "../api/recipes.js";
-import { findQuantityLabel } from "../lib/units.js";
+import { formatQuantity } from "../lib/units.js";
 
-function formatQuantity(quantity: number | null): string | null {
+const SCALE_OPTIONS = [
+  { label: "½×", value: 0.5 },
+  { label: "1×", value: 1 },
+  { label: "2×", value: 2 },
+];
+
+function scaledQuantityLabel(quantity: number | null, scale: number): string | null {
   if (quantity == null) return null;
-  return findQuantityLabel(quantity) ?? String(quantity);
+  return formatQuantity(quantity * scale);
 }
 
 export function RecipeDetailPage() {
@@ -13,6 +20,7 @@ export function RecipeDetailPage() {
   const { data: recipe, isLoading, error } = useRecipe(id);
   const toggleFavorite = useToggleFavorite();
   const deleteRecipe = useDeleteRecipe();
+  const [scale, setScale] = useState(1);
 
   if (isLoading) return <p className="max-w-2xl mx-auto px-4 py-6 text-gray-500">Loading...</p>;
   if (error || !recipe) return <p className="max-w-2xl mx-auto px-4 py-6 text-red-600">Recipe not found.</p>;
@@ -41,7 +49,7 @@ export function RecipeDetailPage() {
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
         {recipe.prepTimeMinutes != null && <span>Prep {recipe.prepTimeMinutes}m</span>}
         {recipe.cookTimeMinutes != null && <span>Cook {recipe.cookTimeMinutes}m</span>}
-        {recipe.servings != null && <span>Serves {recipe.servings}</span>}
+        {recipe.servings != null && <span>Serves {formatQuantity(recipe.servings * scale)}</span>}
         <span className="font-medium text-emerald-700">
           {recipe.daysSinceLastMade == null ? "Never made" : `Last made ${recipe.daysSinceLastMade}d ago`}
         </span>
@@ -58,11 +66,27 @@ export function RecipeDetailPage() {
       )}
 
       <div>
-        <h2 className="font-semibold text-gray-800 mb-1">Ingredients</h2>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <h2 className="font-semibold text-gray-800">Ingredients</h2>
+          <div className="flex gap-1">
+            {SCALE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setScale(opt.value)}
+                className={`px-2.5 py-1 rounded text-xs font-medium ${
+                  scale === opt.value ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5">
           {recipe.ingredients.map((ri) => (
             <li key={ri.id}>
-              {[formatQuantity(ri.quantity), ri.unit, ri.ingredient.name].filter(Boolean).join(" ")}
+              {[scaledQuantityLabel(ri.quantity, scale), ri.unit, ri.ingredient.name].filter(Boolean).join(" ")}
               {ri.notes ? ` (${ri.notes})` : ""}
             </li>
           ))}
