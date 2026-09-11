@@ -6,6 +6,7 @@ import {
   useUpdateShoppingListItem,
 } from "../api/shoppingList.js";
 import { addDays, currentWeekStart, formatWeekRangeLabel } from "../lib/dates.js";
+import { findQuantityLabel } from "../lib/units.js";
 
 export function ShoppingListPage() {
   const [weekStart, setWeekStart] = useState(currentWeekStart());
@@ -36,7 +37,8 @@ export function ShoppingListPage() {
 
   function itemLabel(item: NonNullable<typeof items>[number]) {
     const name = item.ingredient?.name ?? item.customName ?? "";
-    return [item.quantity, item.unit, name].filter((v) => v !== null && v !== "" && v !== undefined).join(" ");
+    const quantity = item.quantity != null ? findQuantityLabel(item.quantity) ?? String(item.quantity) : null;
+    return [quantity, item.unit, name].filter((v) => v !== null && v !== "" && v !== undefined).join(" ");
   }
 
   return (

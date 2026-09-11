@@ -1,4 +1,5 @@
 import { useIngredientSearch } from "../api/ingredients.js";
+import { QUANTITY_OPTIONS, UNIT_OPTIONS } from "../lib/units.js";
 import type { RecipeIngredientInput } from "../types.js";
 
 interface Props {
@@ -34,19 +35,36 @@ function IngredientRow({
           <option key={s.id} value={s.name} />
         ))}
       </datalist>
-      <input
-        type="number"
-        placeholder="Qty"
+      <select
         value={ingredient.quantity ?? ""}
         onChange={(e) => onChangeRow(index, { quantity: e.target.value === "" ? null : Number(e.target.value) })}
-        className="w-20 border rounded px-2 py-1 text-sm"
-      />
-      <input
-        placeholder="Unit"
+        className="w-24 border rounded px-2 py-1 text-sm"
+      >
+        <option value="">Qty</option>
+        {ingredient.quantity != null && !QUANTITY_OPTIONS.some((o) => Math.abs(o.value - ingredient.quantity!) < 0.001) && (
+          <option value={ingredient.quantity}>{ingredient.quantity}</option>
+        )}
+        {QUANTITY_OPTIONS.map((o) => (
+          <option key={o.label} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <select
         value={ingredient.unit ?? ""}
         onChange={(e) => onChangeRow(index, { unit: e.target.value })}
-        className="w-24 border rounded px-2 py-1 text-sm"
-      />
+        className="w-28 border rounded px-2 py-1 text-sm"
+      >
+        <option value="">Unit</option>
+        {ingredient.unit && !UNIT_OPTIONS.includes(ingredient.unit as (typeof UNIT_OPTIONS)[number]) && (
+          <option value={ingredient.unit}>{ingredient.unit}</option>
+        )}
+        {UNIT_OPTIONS.map((u) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))}
+      </select>
       <input
         placeholder="Notes"
         value={ingredient.notes ?? ""}

@@ -1,5 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDeleteRecipe, useRecipe, useToggleFavorite } from "../api/recipes.js";
+import { findQuantityLabel } from "../lib/units.js";
+
+function formatQuantity(quantity: number | null): string | null {
+  if (quantity == null) return null;
+  return findQuantityLabel(quantity) ?? String(quantity);
+}
 
 export function RecipeDetailPage() {
   const { id } = useParams();
@@ -56,7 +62,7 @@ export function RecipeDetailPage() {
         <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5">
           {recipe.ingredients.map((ri) => (
             <li key={ri.id}>
-              {[ri.quantity, ri.unit, ri.ingredient.name].filter(Boolean).join(" ")}
+              {[formatQuantity(ri.quantity), ri.unit, ri.ingredient.name].filter(Boolean).join(" ")}
               {ri.notes ? ` (${ri.notes})` : ""}
             </li>
           ))}
