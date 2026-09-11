@@ -14,6 +14,15 @@ function scaledQuantityLabel(quantity: number | null, scale: number): string | n
   return formatQuantity(quantity * scale);
 }
 
+function isEmbeddableUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function RecipeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -101,9 +110,34 @@ export function RecipeDetailPage() {
       )}
 
       {recipe.sourceUrl && (
-        <a href={recipe.sourceUrl} target="_blank" rel="noreferrer" className="text-sm text-emerald-700 underline">
-          Source
-        </a>
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <h2 className="font-semibold text-gray-800">Source</h2>
+            <a
+              href={recipe.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-emerald-700 underline"
+            >
+              Open in new tab ↗
+            </a>
+          </div>
+          {isEmbeddableUrl(recipe.sourceUrl) ? (
+            <iframe
+              src={recipe.sourceUrl}
+              title="Recipe source"
+              className="w-full h-[600px] border rounded-md"
+              sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
+              referrerPolicy="no-referrer"
+              loading="lazy"
+            />
+          ) : (
+            <p className="text-sm text-gray-500">{recipe.sourceUrl}</p>
+          )}
+          <p className="text-xs text-gray-400 mt-1">
+            Some sites block being embedded here — use "Open in new tab" if the box above stays blank.
+          </p>
+        </div>
       )}
 
       <div className="flex gap-2 mt-2">
