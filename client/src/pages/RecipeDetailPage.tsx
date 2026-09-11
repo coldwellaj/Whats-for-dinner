@@ -111,7 +111,7 @@ export function RecipeDetailPage() {
 
       {recipe.sourceUrl && (
         <div>
-          <div className="flex items-center justify-between gap-2 mb-1">
+          <div className="items-center justify-between gap-2 mb-1">
             <h2 className="font-semibold text-gray-800">Source</h2>
             <a
               href={recipe.sourceUrl}
@@ -119,24 +119,9 @@ export function RecipeDetailPage() {
               rel="noreferrer"
               className="text-sm text-emerald-700 underline"
             >
-              Open in new tab ↗
+              Recipe
             </a>
           </div>
-          {isEmbeddableUrl(recipe.sourceUrl) ? (
-            <iframe
-              src={recipe.sourceUrl}
-              title="Recipe source"
-              className="w-full h-[600px] border rounded-md"
-              sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
-              referrerPolicy="no-referrer"
-              loading="lazy"
-            />
-          ) : (
-            <p className="text-sm text-gray-500">{recipe.sourceUrl}</p>
-          )}
-          <p className="text-xs text-gray-400 mt-1">
-            Some sites block being embedded here — use "Open in new tab" if the box above stays blank.
-          </p>
         </div>
       )}
 
