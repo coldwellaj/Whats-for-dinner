@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite has no native enum support in Prisma; mealType/status are validated
+// application-side against the MealType/MealPlanStatus union types in src/lib/types.ts.
+
+model Recipe {
+  id               String             @id @default(cuid())
+  name             String
+  description      String?
+  instructions     String?
+  prepTimeMinutes  Int?
+  cookTimeMinutes  Int?
+  servings         Int?
+  sourceUrl        String?
+  isFavorite       Boolean            @default(false)
+  tags             String? // comma-separated for MVP
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  ingredients      RecipeIngredient[]
+  mealPlanEntries  MealPlanEntry[]
+}
+
+model Ingredient {
+  id                String             @id @default(cuid())
+  name              String             @unique
+  defaultUnit       String?
+  recipeIngredients RecipeIngredient[]
+  shoppingListItems ShoppingListItem[]
+}
+
+model RecipeIngredient {
+  id           String     @id @default(cuid())
+  recipeId     String
+  ingredientId String
+  quantity     Float?
+  unit         String?
+  notes        String?
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([ingredientId])
+}
+
+model MealPlanEntry {
+  id        String          @id @default(cuid())
+  date      DateTime
+  mealType  String
+  recipeId  String
+  status    String   @default("PLANNED")
+  createdAt DateTime @default(now())
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([date])
+}
+
+model ShoppingListItem {
+  id            String      @id @default(cuid())
+  weekStartDate String // stored as YYYY-MM-DD key for the week
+  ingredientId  String?
+  customName    String?
+  quantity      Float?
+  unit          String?
+  isChecked     Boolean     @default(false)
+  isManual      Boolean     @default(false)
+  ingredient    Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
+
+  @@unique([weekStartDate, ingredientId])
+  @@index([weekStartDate])
+}

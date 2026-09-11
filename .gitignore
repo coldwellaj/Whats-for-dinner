@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+*.log
+
+# env
+.env
+.env.local
+
+# database
+server/prisma/dev.db
+server/prisma/dev.db-journal
+*.db
+*.db-journal
+
+# editor/OS
+.DS_Store
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json
