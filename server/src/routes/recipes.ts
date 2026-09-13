@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
 import { getLastMadeForRecipe, getLastMadeForRecipes } from "../lib/lastMade.js";
+import { scopeWhere } from "../middleware/requireAuth.js";
 
 export const recipesRouter = Router();
 
@@ -40,7 +41,7 @@ recipesRouter.get("/", async (req, res) => {
 
   const recipes = await prisma.recipe.findMany({
     where: {
-      userId: req.userId,
+      ...scopeWhere(req),
       ...(favoriteOnly ? { isFavorite: true } : {}),
       ...(search
         ? {
@@ -55,7 +56,7 @@ recipesRouter.get("/", async (req, res) => {
     orderBy: { name: "asc" },
   });
 
-  const lastMadeByRecipe = await getLastMadeForRecipes(req.userId, recipes.map((r) => r.id));
+  const lastMadeByRecipe = await getLastMadeForRecipes(scopeWhere(req), recipes.map((r) => r.id));
 
   let result = recipes.map((r) => ({ ...r, ...lastMadeByRecipe[r.id] }));
 
@@ -73,11 +74,11 @@ recipesRouter.get("/", async (req, res) => {
 
 recipesRouter.get("/:id", async (req, res) => {
   const recipe = await prisma.recipe.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+    where: { id: req.params.id, ...scopeWhere(req) },
     include: { ingredients: { include: { ingredient: true } } },
   });
   if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-  const lastMade = await getLastMadeForRecipe(req.userId, recipe.id);
+  const lastMade = await getLastMadeForRecipe(scopeWhere(req), recipe.id);
   res.json({ ...recipe, ...lastMade });
 });
 
@@ -102,6 +103,7 @@ recipesRouter.post("/", async (req, res) => {
   const recipe = await prisma.recipe.create({
     data: {
       userId: req.userId,
+      familyId: req.familyId,
       name: name.trim(),
       description: description ?? null,
       instructions: instructions ?? null,
@@ -125,7 +127,7 @@ recipesRouter.post("/", async (req, res) => {
 });
 
 recipesRouter.put("/:id", async (req, res) => {
-  const existing = await prisma.recipe.findFirst({ where: { id: req.params.id, userId: req.userId } });
+  const existing = await prisma.recipe.findFirst({ where: { id: req.params.id, ...scopeWhere(req) } });
   if (!existing) return res.status(404).json({ error: "Recipe not found" });
 
   const { name, description, instructions, prepTimeMinutes, cookTimeMinutes, servings, sourceUrl, tags, ingredients } =
@@ -167,12 +169,12 @@ recipesRouter.put("/:id", async (req, res) => {
 });
 
 recipesRouter.delete("/:id", async (req, res) => {
-  await prisma.recipe.deleteMany({ where: { id: req.params.id, userId: req.userId } });
+  await prisma.recipe.deleteMany({ where: { id: req.params.id, ...scopeWhere(req) } });
   res.status(204).end();
 });
 
 recipesRouter.post("/:id/favorite", async (req, res) => {
-  const recipe = await prisma.recipe.findFirst({ where: { id: req.params.id, userId: req.userId } });
+  const recipe = await prisma.recipe.findFirst({ where: { id: req.params.id, ...scopeWhere(req) } });
   if (!recipe) return res.status(404).json({ error: "Recipe not found" });
   const updated = await prisma.recipe.update({
     where: { id: req.params.id },

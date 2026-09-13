@@ -6,6 +6,7 @@ import { ingredientsRouter } from "./routes/ingredients.js";
 import { mealPlanRouter } from "./routes/mealPlan.js";
 import { shoppingListRouter } from "./routes/shoppingList.js";
 import { authRouter } from "./routes/auth.js";
+import { familyRouter } from "./routes/family.js";
 import { requireAuth } from "./middleware/requireAuth.js";
 
 export const app = express();
@@ -19,6 +20,7 @@ app.use("/api/auth", authRouter);
 
 app.use(requireAuth);
 
+app.use("/api/family", familyRouter);
 app.use("/api/recipes", recipesRouter);
 app.use("/api/ingredients", ingredientsRouter);
 app.use("/api/meal-plan", mealPlanRouter);

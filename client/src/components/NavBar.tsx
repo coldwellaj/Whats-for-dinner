@@ -22,6 +22,9 @@ export function NavBar({ user }: { user: CurrentUser }) {
         <NavLink to="/shopping-list" className={linkClass}>
           Shopping List
         </NavLink>
+        <NavLink to="/family" className={linkClass}>
+          Family
+        </NavLink>
         <div className="ml-auto flex items-center gap-2">
           {user.picture && (
             <img src={user.picture} alt="" className="w-7 h-7 rounded-full" referrerPolicy="no-referrer" />

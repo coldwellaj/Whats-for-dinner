@@ -6,6 +6,7 @@ import { RecipeFormPage } from "./pages/RecipeFormPage.js";
 import { RecipeDetailPage } from "./pages/RecipeDetailPage.js";
 import { MealPlanPage } from "./pages/MealPlanPage.js";
 import { ShoppingListPage } from "./pages/ShoppingListPage.js";
+import { FamilyPage } from "./pages/FamilyPage.js";
 import { useCurrentUser } from "./api/auth.js";
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />
         <Route path="/plan" element={<MealPlanPage />} />
         <Route path="/shopping-list" element={<ShoppingListPage />} />
+        <Route path="/family" element={<FamilyPage />} />
       </Routes>
     </div>
   );

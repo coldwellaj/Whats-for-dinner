@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { prisma } from "../db.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { sessionCookieName, sessionCookieOptions, signSession } from "../lib/auth.js";
+import { joinFamily } from "../lib/family.js";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 if (!GOOGLE_CLIENT_ID) {
@@ -32,7 +33,7 @@ authRouter.post("/google", async (req, res) => {
     return res.status(401).json({ error: "Invalid Google credential" });
   }
 
-  const user = await prisma.user.upsert({
+  let user = await prisma.user.upsert({
     where: { googleId: payload.sub },
     update: { email: payload.email, name: payload.name ?? null, picture: payload.picture ?? null },
     create: {
@@ -43,8 +44,17 @@ authRouter.post("/google", async (req, res) => {
     },
   });
 
+  if (!user.familyId) {
+    const invite = await prisma.familyInvite.findFirst({ where: { email: user.email } });
+    if (invite) {
+      await joinFamily(user.id, invite.familyId);
+      await prisma.familyInvite.delete({ where: { id: invite.id } });
+      user = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    }
+  }
+
   res.cookie(sessionCookieName, signSession(user.id), sessionCookieOptions);
-  res.json({ user: { id: user.id, email: user.email, name: user.name, picture: user.picture } });
+  res.json({ user: toUserJson(user) });
 });
 
 authRouter.post("/logout", (_req, res) => {
@@ -55,5 +65,9 @@ authRouter.post("/logout", (_req, res) => {
 authRouter.get("/me", requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
   if (!user) return res.status(401).json({ error: "Not authenticated" });
-  res.json({ user: { id: user.id, email: user.email, name: user.name, picture: user.picture } });
+  res.json({ user: toUserJson(user) });
 });
+
+function toUserJson(user: { id: string; email: string; name: string | null; picture: string | null; familyId: string | null }) {
+  return { id: user.id, email: user.email, name: user.name, picture: user.picture, familyId: user.familyId };
+}

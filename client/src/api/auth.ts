@@ -6,6 +6,7 @@ export interface CurrentUser {
   email: string;
   name: string | null;
   picture: string | null;
+  familyId: string | null;
 }
 
 export function useCurrentUser() {

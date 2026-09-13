@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
 import { reconcileAutoShoppingListItems } from "../lib/shoppingList.js";
+import { scopeWhere } from "../middleware/requireAuth.js";
 
 export const shoppingListRouter = Router();
 
@@ -9,10 +10,10 @@ shoppingListRouter.get("/", async (req, res) => {
   const weekStart = req.query.weekStart as string | undefined;
   if (!weekStart) return res.status(400).json({ error: "weekStart query param is required" });
 
-  await reconcileAutoShoppingListItems(req.userId, weekStart);
+  await reconcileAutoShoppingListItems({ userId: req.userId, familyId: req.familyId }, weekStart);
 
   const items = await prisma.shoppingListItem.findMany({
-    where: { userId: req.userId, weekStartDate: weekStart },
+    where: { ...scopeWhere(req), weekStartDate: weekStart },
     include: { ingredient: true },
     orderBy: [{ isManual: "asc" }, { id: "asc" }],
   });
@@ -32,6 +33,7 @@ shoppingListRouter.post("/:weekStart/items", async (req, res) => {
   const item = await prisma.shoppingListItem.create({
     data: {
       userId: req.userId,
+      familyId: req.familyId,
       weekStartDate: req.params.weekStart,
       customName: customName.trim(),
       quantity: quantity ?? null,
@@ -45,7 +47,7 @@ shoppingListRouter.post("/:weekStart/items", async (req, res) => {
 // PUT /api/shopping-list/items/:id  (toggle checked, edit manual item)
 shoppingListRouter.put("/items/:id", async (req, res) => {
   const existing = await prisma.shoppingListItem.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+    where: { id: req.params.id, ...scopeWhere(req) },
   });
   if (!existing) return res.status(404).json({ error: "Item not found" });
 
@@ -70,6 +72,6 @@ shoppingListRouter.put("/items/:id", async (req, res) => {
 
 // DELETE /api/shopping-list/items/:id
 shoppingListRouter.delete("/items/:id", async (req, res) => {
-  await prisma.shoppingListItem.deleteMany({ where: { id: req.params.id, userId: req.userId } });
+  await prisma.shoppingListItem.deleteMany({ where: { id: req.params.id, ...scopeWhere(req) } });
   res.status(204).end();
 });

@@ -1,16 +1,24 @@
 import { prisma } from "../db.js";
 import { weekRange } from "./week.js";
 
+export type OwnerScope = { userId: string; familyId: string | null };
+
+function scopeWhere({ userId, familyId }: OwnerScope) {
+  return familyId ? { familyId } : { familyId: null, userId };
+}
+
 /**
  * Recomputes the auto-generated (recipe-derived) shopping list items for a week from the
  * current meal plan, upserting quantities while preserving each item's checked state, and
  * removing auto items for ingredients no longer needed this week. Manual items are untouched.
+ * Scoped to a family's shared plan when the caller is in one, else to just their own plan.
  */
-export async function reconcileAutoShoppingListItems(userId: string, weekStartDate: string) {
+export async function reconcileAutoShoppingListItems(scope: OwnerScope, weekStartDate: string) {
   const { start, end } = weekRange(weekStartDate);
+  const where = scopeWhere(scope);
 
   const entries = await prisma.mealPlanEntry.findMany({
-    where: { userId, date: { gte: start, lt: end } },
+    where: { ...where, date: { gte: start, lt: end } },
     include: { recipe: { include: { ingredients: true } } },
   });
 
@@ -32,7 +40,7 @@ export async function reconcileAutoShoppingListItems(userId: string, weekStartDa
   }
 
   const existingAutoItems = await prisma.shoppingListItem.findMany({
-    where: { userId, weekStartDate, isManual: false },
+    where: { ...where, weekStartDate, isManual: false },
   });
   const existingByIngredient = new Map(existingAutoItems.map((i) => [i.ingredientId, i]));
 
@@ -42,7 +50,7 @@ export async function reconcileAutoShoppingListItems(userId: string, weekStartDa
     // Remove auto items for ingredients no longer used this week
     prisma.shoppingListItem.deleteMany({
       where: {
-        userId,
+        ...where,
         weekStartDate,
         isManual: false,
         ingredientId: { notIn: Array.from(neededIngredientIds) },
@@ -57,7 +65,7 @@ export async function reconcileAutoShoppingListItems(userId: string, weekStartDa
         });
       }
       return prisma.shoppingListItem.create({
-        data: { userId, weekStartDate, ingredientId, quantity, unit, isManual: false },
+        data: { userId: scope.userId, familyId: scope.familyId, weekStartDate, ingredientId, quantity, unit, isManual: false },
       });
     }),
   ]);
