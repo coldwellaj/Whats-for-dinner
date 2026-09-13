@@ -14,6 +14,7 @@ mealPlanRouter.get("/", async (req, res) => {
   }
   const entries = await prisma.mealPlanEntry.findMany({
     where: {
+      userId: req.userId,
       date: {
         gte: new Date(`${start}T00:00:00.000Z`),
         lt: new Date(`${end}T00:00:00.000Z`),
@@ -37,17 +38,20 @@ mealPlanRouter.post("/", async (req, res) => {
   if (!isMealType(mealType)) {
     return res.status(400).json({ error: "Invalid mealType" });
   }
+  const recipe = await prisma.recipe.findFirst({ where: { id: recipeId, userId: req.userId } });
+  if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+
   const entryDate = new Date(`${date}T00:00:00.000Z`);
   const entry = await prisma.mealPlanEntry.create({
-    data: { date: entryDate, mealType, recipeId },
+    data: { userId: req.userId, date: entryDate, mealType, recipeId },
     include: { recipe: true },
   });
-  await reconcileAutoShoppingListItems(weekStartKeyFor(entryDate));
+  await reconcileAutoShoppingListItems(req.userId, weekStartKeyFor(entryDate));
   res.status(201).json(entry);
 });
 
 mealPlanRouter.put("/:id", async (req, res) => {
-  const existing = await prisma.mealPlanEntry.findUnique({ where: { id: req.params.id } });
+  const existing = await prisma.mealPlanEntry.findFirst({ where: { id: req.params.id, userId: req.userId } });
   if (!existing) return res.status(404).json({ error: "Meal plan entry not found" });
 
   const { date, mealType, recipeId, status } = req.body as {
@@ -62,6 +66,10 @@ mealPlanRouter.put("/:id", async (req, res) => {
   if (status !== undefined && !isMealPlanStatus(status)) {
     return res.status(400).json({ error: "Invalid status" });
   }
+  if (recipeId !== undefined) {
+    const recipe = await prisma.recipe.findFirst({ where: { id: recipeId, userId: req.userId } });
+    if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+  }
 
   const updated = await prisma.mealPlanEntry.update({
     where: { id: req.params.id },
@@ -74,17 +82,17 @@ mealPlanRouter.put("/:id", async (req, res) => {
     include: { recipe: true },
   });
 
-  await reconcileAutoShoppingListItems(weekStartKeyFor(existing.date));
+  await reconcileAutoShoppingListItems(req.userId, weekStartKeyFor(existing.date));
   if (date !== undefined) {
-    await reconcileAutoShoppingListItems(weekStartKeyFor(updated.date));
+    await reconcileAutoShoppingListItems(req.userId, weekStartKeyFor(updated.date));
   }
   res.json(updated);
 });
 
 mealPlanRouter.delete("/:id", async (req, res) => {
-  const existing = await prisma.mealPlanEntry.findUnique({ where: { id: req.params.id } });
+  const existing = await prisma.mealPlanEntry.findFirst({ where: { id: req.params.id, userId: req.userId } });
   if (!existing) return res.status(204).end();
   await prisma.mealPlanEntry.delete({ where: { id: req.params.id } });
-  await reconcileAutoShoppingListItems(weekStartKeyFor(existing.date));
+  await reconcileAutoShoppingListItems(req.userId, weekStartKeyFor(existing.date));
   res.status(204).end();
 });

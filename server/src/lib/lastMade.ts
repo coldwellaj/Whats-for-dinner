@@ -13,9 +13,9 @@ function toInfo(lastMadeAt: Date | null): LastMadeInfo {
 }
 
 /** Most recent MADE meal-plan entry date for a single recipe. */
-export async function getLastMadeForRecipe(recipeId: string): Promise<LastMadeInfo> {
+export async function getLastMadeForRecipe(userId: string, recipeId: string): Promise<LastMadeInfo> {
   const entry = await prisma.mealPlanEntry.findFirst({
-    where: { recipeId, status: "MADE" },
+    where: { userId, recipeId, status: "MADE" },
     orderBy: { date: "desc" },
   });
   return toInfo(entry?.date ?? null);
@@ -23,11 +23,12 @@ export async function getLastMadeForRecipe(recipeId: string): Promise<LastMadeIn
 
 /** Most recent MADE meal-plan entry date for many recipes at once, keyed by recipeId. */
 export async function getLastMadeForRecipes(
+  userId: string,
   recipeIds: string[]
 ): Promise<Record<string, LastMadeInfo>> {
   if (recipeIds.length === 0) return {};
   const entries = await prisma.mealPlanEntry.findMany({
-    where: { recipeId: { in: recipeIds }, status: "MADE" },
+    where: { userId, recipeId: { in: recipeIds }, status: "MADE" },
     orderBy: { date: "desc" },
   });
   const latestByRecipe = new Map<string, Date>();

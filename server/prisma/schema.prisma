@@ -11,8 +11,22 @@ datasource db {
 // from SQLite; they're validated application-side against the MealType/MealPlanStatus
 // union types in src/lib/types.ts.
 
+model User {
+  id        String   @id @default(cuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String?
+  picture   String?
+  createdAt DateTime @default(now())
+
+  recipes           Recipe[]
+  mealPlanEntries   MealPlanEntry[]
+  shoppingListItems ShoppingListItem[]
+}
+
 model Recipe {
   id               String             @id @default(cuid())
+  userId           String
   name             String
   description      String?
   instructions     String?
@@ -24,8 +38,11 @@ model Recipe {
   tags             String? // comma-separated for MVP
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]
   mealPlanEntries  MealPlanEntry[]
+
+  @@index([userId])
 }
 
 model Ingredient {
@@ -51,20 +68,24 @@ model RecipeIngredient {
 }
 
 model MealPlanEntry {
-  id        String          @id @default(cuid())
+  id        String   @id @default(cuid())
+  userId    String
   date      DateTime
   mealType  String
   recipeId  String
   status    String   @default("PLANNED")
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@index([recipeId])
   @@index([date])
 }
 
 model ShoppingListItem {
   id            String      @id @default(cuid())
+  userId        String
   weekStartDate String // stored as YYYY-MM-DD key for the week
   ingredientId  String?
   customName    String?
@@ -72,8 +93,9 @@ model ShoppingListItem {
   unit          String?
   isChecked     Boolean     @default(false)
   isManual      Boolean     @default(false)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   ingredient    Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
 
-  @@unique([weekStartDate, ingredientId])
-  @@index([weekStartDate])
+  @@unique([userId, weekStartDate, ingredientId])
+  @@index([userId, weekStartDate])
 }

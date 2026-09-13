@@ -6,11 +6,11 @@ import { weekRange } from "./week.js";
  * current meal plan, upserting quantities while preserving each item's checked state, and
  * removing auto items for ingredients no longer needed this week. Manual items are untouched.
  */
-export async function reconcileAutoShoppingListItems(weekStartDate: string) {
+export async function reconcileAutoShoppingListItems(userId: string, weekStartDate: string) {
   const { start, end } = weekRange(weekStartDate);
 
   const entries = await prisma.mealPlanEntry.findMany({
-    where: { date: { gte: start, lt: end } },
+    where: { userId, date: { gte: start, lt: end } },
     include: { recipe: { include: { ingredients: true } } },
   });
 
@@ -32,7 +32,7 @@ export async function reconcileAutoShoppingListItems(weekStartDate: string) {
   }
 
   const existingAutoItems = await prisma.shoppingListItem.findMany({
-    where: { weekStartDate, isManual: false },
+    where: { userId, weekStartDate, isManual: false },
   });
   const existingByIngredient = new Map(existingAutoItems.map((i) => [i.ingredientId, i]));
 
@@ -42,6 +42,7 @@ export async function reconcileAutoShoppingListItems(weekStartDate: string) {
     // Remove auto items for ingredients no longer used this week
     prisma.shoppingListItem.deleteMany({
       where: {
+        userId,
         weekStartDate,
         isManual: false,
         ingredientId: { notIn: Array.from(neededIngredientIds) },
@@ -56,7 +57,7 @@ export async function reconcileAutoShoppingListItems(weekStartDate: string) {
         });
       }
       return prisma.shoppingListItem.create({
-        data: { weekStartDate, ingredientId, quantity, unit, isManual: false },
+        data: { userId, weekStartDate, ingredientId, quantity, unit, isManual: false },
       });
     }),
   ]);
