@@ -3,12 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("Database_DATABASE_URL")
 }
 
-// SQLite has no native enum support in Prisma; mealType/status are validated
-// application-side against the MealType/MealPlanStatus union types in src/lib/types.ts.
+// Enums aren't used for mealType/status so the same schema shape carried over cleanly
+// from SQLite; they're validated application-side against the MealType/MealPlanStatus
+// union types in src/lib/types.ts.
 
 model Recipe {
   id               String             @id @default(cuid())
