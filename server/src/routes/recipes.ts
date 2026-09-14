@@ -1,7 +1,21 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { prisma } from "../db.js";
 import { getLastMadeForRecipe, getLastMadeForRecipes } from "../lib/lastMade.js";
 import { scopeWhere } from "../middleware/requireAuth.js";
+
+// Excludes the caller's own scope from a shared-recipe query. Deliberately avoids both
+// `NOT: scopeWhere(req)` and a bare `familyId: { not: req.familyId } }` — Prisma compiles
+// both to plain SQL `<>`/`NOT (...)`, and SQL's three-valued logic makes `NULL <> X`
+// evaluate to NULL (dropped by WHERE, not included), silently hiding every personal-scoped
+// (familyId IS NULL) shared recipe from any family-scoped caller. Explicitly OR-ing in a
+// `familyId: null` branch (which Prisma *does* compile to a proper `IS NULL`/`IS NOT NULL`)
+// sidesteps that: NULL rows match the null-check branch directly, so the NULL-propagating
+// comparison in the other branch never has to evaluate them.
+function excludeOwnScope(req: Request) {
+  return req.familyId
+    ? { OR: [{ familyId: null }, { familyId: { not: req.familyId } }] }
+    : { OR: [{ familyId: { not: null } }, { userId: { not: req.userId } }] };
+}
 
 export const recipesRouter = Router();
 
@@ -79,7 +93,7 @@ recipesRouter.get("/shared", async (req, res) => {
   const orderBy = req.query.sort === "popular" ? [{ saveCount: "desc" as const }, { name: "asc" as const }] : [{ name: "asc" as const }];
 
   const recipes = await prisma.recipe.findMany({
-    where: { isShared: true, NOT: scopeWhere(req) },
+    where: { isShared: true, ...excludeOwnScope(req) },
     include: {
       ingredients: { include: { ingredient: true } },
       user: { select: { name: true, email: true } },

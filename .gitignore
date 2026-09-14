@@ -20,3 +20,6 @@ server/prisma/dev.db-journal
 
 # Claude Code local settings
 .claude/settings.local.json
+
+.vercel
+.env*
