@@ -27,6 +27,33 @@ export function useGoogleLogin() {
   });
 }
 
+export interface EmailCredentials {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export function useEmailSignup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: EmailCredentials) => api.post<{ user: CurrentUser }>("/auth/signup", data),
+    onSuccess: ({ user }) => {
+      queryClient.setQueryData(["auth", "me"], user);
+    },
+  });
+}
+
+export function useEmailLogin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Pick<EmailCredentials, "email" | "password">) =>
+      api.post<{ user: CurrentUser }>("/auth/login", data),
+    onSuccess: ({ user }) => {
+      queryClient.setQueryData(["auth", "me"], user);
+    },
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({

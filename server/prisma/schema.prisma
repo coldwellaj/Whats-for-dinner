@@ -12,12 +12,13 @@ datasource db {
 // union types in src/lib/types.ts.
 
 model User {
-  id        String   @id @default(cuid())
-  googleId  String   @unique
-  email     String   @unique
-  name      String?
-  picture   String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  googleId     String?  @unique
+  passwordHash String?
+  email        String   @unique
+  name         String?
+  picture      String?
+  createdAt    DateTime @default(now())
 
   familyId      String?
   family        Family?  @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
