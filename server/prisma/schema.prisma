@@ -20,6 +20,13 @@ model User {
   picture      String?
   createdAt    DateTime @default(now())
 
+  // Friends visibility settings: "ALL" | "FRIENDS" | "PRIVATE" (app-validated, see
+  // src/lib/types.ts). Default PRIVATE so existing/new users don't get opted into
+  // sharing activity with anyone until they choose to.
+  mealPlanVisibility     String @default("PRIVATE")
+  recentlyMadeVisibility String @default("PRIVATE")
+  recipeListVisibility   String @default("PRIVATE")
+
   familyId      String?
   family        Family?  @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
   ownedFamilies Family[] @relation("FamilyOwner")
@@ -27,6 +34,27 @@ model User {
   recipes           Recipe[]
   mealPlanEntries   MealPlanEntry[]
   shoppingListItems ShoppingListItem[]
+
+  sentFriendRequests     Friendship[] @relation("FriendshipRequester")
+  receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
+}
+
+// A friendship, one row per pair. Starts PENDING (created by the requester) and becomes
+// ACCEPTED once the addressee accepts; either row shape is queried symmetrically once
+// accepted (see lib/friends.ts) since the request direction no longer matters at that point.
+model Friendship {
+  id          String    @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      String    @default("PENDING") // "PENDING" | "ACCEPTED"
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
 }
 
 // A shared household: recipes/meal-plan/shopping-list scope to the family once a

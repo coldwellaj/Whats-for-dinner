@@ -24,10 +24,13 @@ const PASSWORD_MIN_LENGTH = 8;
 
 export const authRouter = Router();
 
-// Resolves any pending family invite for a freshly-authenticated user, then
-// logs them in. Shared by signup/login/Google so all three land the invite.
-async function finishLogin(res: Response, user: User) {
-  if (!user.familyId) {
+// Logs the user in. For a brand-new account only (isNewUser), also auto-resolves a
+// pending family invite for their email — signing up via that invite *is* their
+// confirmation. An existing user must explicitly accept via the Family page instead;
+// otherwise simply logging in again would silently join them to a family with no
+// confirmation step at all, which is exactly what adding invite emails was meant to fix.
+async function finishLogin(res: Response, user: User, isNewUser: boolean) {
+  if (isNewUser && !user.familyId) {
     const invite = await prisma.familyInvite.findFirst({ where: { email: user.email } });
     if (invite) {
       await joinFamily(user.id, invite.familyId);
@@ -65,7 +68,7 @@ authRouter.post("/signup", async (req, res) => {
     },
   });
 
-  await finishLogin(res, user);
+  await finishLogin(res, user, true);
 });
 
 // POST /api/auth/login  { email, password }
@@ -85,7 +88,7 @@ authRouter.post("/login", async (req, res) => {
     return res.status(401).json({ error: "Invalid email or password" });
   }
 
-  await finishLogin(res, user);
+  await finishLogin(res, user, false);
 });
 
 // POST /api/auth/google  { credential: <Google ID token> }
@@ -112,27 +115,34 @@ authRouter.post("/google", async (req, res) => {
   // email constraint by trying to create a second user with it.
   const existingByEmail = await prisma.user.findUnique({ where: { email: payload.email } });
 
-  const user = existingByEmail
-    ? await prisma.user.update({
-        where: { id: existingByEmail.id },
-        data: {
-          googleId: payload.sub,
-          name: existingByEmail.name ?? payload.name ?? null,
-          picture: payload.picture ?? existingByEmail.picture ?? null,
-        },
-      })
-    : await prisma.user.upsert({
-        where: { googleId: payload.sub },
-        update: { email: payload.email, name: payload.name ?? null, picture: payload.picture ?? null },
-        create: {
-          googleId: payload.sub,
-          email: payload.email,
-          name: payload.name ?? null,
-          picture: payload.picture ?? null,
-        },
+  let user: User;
+  let isNewUser = false;
+  if (existingByEmail) {
+    user = await prisma.user.update({
+      where: { id: existingByEmail.id },
+      data: {
+        googleId: payload.sub,
+        name: existingByEmail.name ?? payload.name ?? null,
+        picture: payload.picture ?? existingByEmail.picture ?? null,
+      },
+    });
+  } else {
+    // Google account's email may have changed since a prior login; fall back to googleId.
+    const existingByGoogleId = await prisma.user.findUnique({ where: { googleId: payload.sub } });
+    if (existingByGoogleId) {
+      user = await prisma.user.update({
+        where: { id: existingByGoogleId.id },
+        data: { email: payload.email, name: payload.name ?? null, picture: payload.picture ?? null },
       });
+    } else {
+      user = await prisma.user.create({
+        data: { googleId: payload.sub, email: payload.email, name: payload.name ?? null, picture: payload.picture ?? null },
+      });
+      isNewUser = true;
+    }
+  }
 
-  await finishLogin(res, user);
+  await finishLogin(res, user, isNewUser);
 });
 
 authRouter.post("/logout", (_req, res) => {

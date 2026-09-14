@@ -77,6 +77,35 @@ export interface RecipeSummary {
   isFavorite: boolean;
 }
 
+export type Visibility = "ALL" | "FRIENDS" | "PRIVATE";
+
+export interface PrivacySettings {
+  mealPlanVisibility: Visibility;
+  recentlyMadeVisibility: Visibility;
+  recipeListVisibility: Visibility;
+}
+
+export interface FriendProfile {
+  id: string;
+  name: string | null;
+  email: string;
+  picture: string | null;
+}
+
+export interface Friend extends FriendProfile {
+  friendshipId: string;
+}
+
+export interface FriendRequestIncoming {
+  id: string;
+  from: FriendProfile;
+}
+
+export interface FriendRequestOutgoing {
+  id: string;
+  to: FriendProfile;
+}
+
 export interface ShoppingListItem {
   id: string;
   weekStartDate: string;

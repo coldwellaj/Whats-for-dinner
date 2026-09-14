@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { useEmailLogin, useEmailSignup, useGoogleLogin } from "../api/auth.js";
 import { Logo } from "./Logo.js";
@@ -8,8 +9,13 @@ export function LoginScreen() {
   const emailLogin = useEmailLogin();
   const emailSignup = useEmailSignup();
 
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
+  // Family-invite emails link new users here as `?signup=<email>` to land straight in
+  // signup mode with their email already filled in.
+  const [searchParams] = useSearchParams();
+  const prefillEmail = searchParams.get("signup") ?? "";
+
+  const [mode, setMode] = useState<"login" | "signup">(prefillEmail ? "signup" : "login");
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 

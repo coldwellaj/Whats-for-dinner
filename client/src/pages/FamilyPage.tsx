@@ -1,6 +1,60 @@
 import { useState } from "react";
 import { useCurrentUser } from "../api/auth.js";
-import { useCreateFamily, useFamily, useInviteToFamily, useRemoveFamilyMember } from "../api/family.js";
+import {
+  useAcceptFamilyInvite,
+  useCreateFamily,
+  useFamily,
+  useInviteToFamily,
+  useMyFamilyInvites,
+  useRemoveFamilyInvite,
+  useRemoveFamilyMember,
+} from "../api/family.js";
+
+function MyInvitesSection() {
+  const { data: invites } = useMyFamilyInvites();
+  const acceptInvite = useAcceptFamilyInvite();
+  const removeInvite = useRemoveFamilyInvite();
+  const [error, setError] = useState<string | null>(null);
+
+  if (!invites || invites.length === 0) return null;
+
+  async function handleAccept(id: string) {
+    setError(null);
+    try {
+      await acceptInvite.mutateAsync(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to accept invite");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="font-semibold text-gray-800">Family invites</h2>
+      <ul className="flex flex-col gap-1">
+        {invites.map((invite) => (
+          <li key={invite.id} className="flex items-center gap-2 bg-white border rounded px-3 py-2">
+            <span className="flex-1 text-sm">
+              Join <strong>{invite.familyName || "their family"}</strong>
+            </span>
+            <button
+              onClick={() => handleAccept(invite.id)}
+              className="text-sm text-olive-700 hover:underline px-2 py-1"
+            >
+              Accept
+            </button>
+            <button
+              onClick={() => removeInvite.mutate(invite.id)}
+              className="text-sm text-gray-400 hover:text-red-500 px-2 py-1"
+            >
+              Decline
+            </button>
+          </li>
+        ))}
+      </ul>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
 
 export function FamilyPage() {
   const { data: user } = useCurrentUser();
@@ -8,6 +62,7 @@ export function FamilyPage() {
   const createFamily = useCreateFamily();
   const inviteToFamily = useInviteToFamily();
   const removeMember = useRemoveFamilyMember();
+  const removeInvite = useRemoveFamilyInvite();
 
   const [familyName, setFamilyName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -24,10 +79,8 @@ export function FamilyPage() {
     const email = inviteEmail.trim();
     if (!email) return;
     try {
-      const result = await inviteToFamily.mutateAsync(email);
-      setInviteMessage(
-        result.status === "added" ? `${email} was added to your family.` : `Invite sent — ${email} will join automatically when they sign in.`
-      );
+      await inviteToFamily.mutateAsync(email);
+      setInviteMessage(`Invite sent — ${email} needs to accept it to join.`);
       setInviteEmail("");
     } catch (err) {
       setInviteMessage(err instanceof Error ? err.message : "Failed to send invite");
@@ -40,6 +93,7 @@ export function FamilyPage() {
     return (
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Family</h1>
+        <MyInvitesSection />
         <p className="text-sm text-gray-600">
           Create a family to share your recipes, meal plan, and shopping list with other people. Your existing
           recipes and plans will move into the family.
@@ -90,6 +144,26 @@ export function FamilyPage() {
           </li>
         ))}
       </ul>
+
+      {family.invites.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <h2 className="text-sm font-medium text-gray-500">Pending invites sent</h2>
+          <ul className="flex flex-col gap-1">
+            {family.invites.map((invite) => (
+              <li key={invite.id} className="flex items-center gap-2 bg-gray-50 border rounded px-3 py-2">
+                <span className="flex-1 text-sm text-gray-600">{invite.email}</span>
+                <span className="text-xs text-gray-400">Pending</span>
+                <button
+                  onClick={() => removeInvite.mutate(invite.id)}
+                  className="text-sm text-gray-400 hover:text-red-500 px-2 py-1"
+                >
+                  Cancel
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <form onSubmit={handleInvite} className="flex gap-2 flex-wrap">
         <input

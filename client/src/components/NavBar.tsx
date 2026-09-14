@@ -14,6 +14,7 @@ const NAV_LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/plan", label: "Meal Plan" },
   { to: "/shopping-list", label: "Shopping List" },
   { to: "/family", label: "Family" },
+  { to: "/friends", label: "Friends" },
 ];
 
 export function NavBar({ user }: { user: CurrentUser }) {
