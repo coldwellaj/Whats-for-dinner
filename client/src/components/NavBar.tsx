@@ -5,7 +5,7 @@ import { Logo } from "./Logo.js";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap ${
-    isActive ? "bg-olive-600 text-white" : "text-gray-700 hover:bg-gray-100"
+    isActive ? "bg-terracotta-600 text-white" : "text-gray-700 hover:bg-gray-100"
   }`;
 
 const NAV_LINKS: { to: string; label: string; end?: boolean }[] = [

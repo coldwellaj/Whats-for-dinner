@@ -4,27 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand scale built around the logo's olive green (600 = #5c6b2f, the plate badge color).
-        olive: {
-          50: "#f6f7f3",
-          100: "#e9ecdf",
-          200: "#d4dbbd",
-          300: "#bbc892",
-          400: "#9fb45f",
-          500: "#7c9041",
-          600: "#5c6b2f",
-          700: "#495625",
-          800: "#3a441d",
-          900: "#2e3617",
-          950: "#1c210d",
-        },
-        // Accent from the logo's checkmark badge.
+        // Brand scale built around the Rotisserie logo's burnt orange (600 = #c2410c,
+        // the badge fill color).
         terracotta: {
-          50: "#fdf3ee",
-          100: "#fbe1d3",
-          500: "#e15f21",
+          50: "#fdf1ec",
+          100: "#fce0d4",
+          200: "#f9c4ae",
+          300: "#f69d79",
+          400: "#f26d36",
+          500: "#e64e0f",
           600: "#c2410c",
-          700: "#9a350f",
+          700: "#99340a",
+          800: "#76290a",
+          900: "#57200a",
+          950: "#311307",
         },
       },
     },

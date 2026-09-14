@@ -15,7 +15,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
   return (
     <div className="border rounded-lg p-4 bg-white flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2">
-        <Link to={`/recipes/${recipe.id}`} className="font-semibold text-lg text-olive-800 hover:underline">
+        <Link to={`/recipes/${recipe.id}`} className="font-semibold text-lg text-terracotta-800 hover:underline">
           {recipe.name}
         </Link>
         <button
@@ -32,7 +32,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         {recipe.cookTimeMinutes != null && <span>Cook {recipe.cookTimeMinutes}m</span>}
         {recipe.servings != null && <span>Serves {recipe.servings}</span>}
       </div>
-      <span className="text-xs font-medium text-olive-700">{lastMadeLabel(recipe)}</span>
+      <span className="text-xs font-medium text-terracotta-700">{lastMadeLabel(recipe)}</span>
       {recipe.tags && (
         <div className="flex flex-wrap gap-1 mt-1">
           {recipe.tags.split(",").map((t) => (

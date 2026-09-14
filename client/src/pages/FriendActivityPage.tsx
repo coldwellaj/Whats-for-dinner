@@ -13,7 +13,7 @@ const MEAL_LABELS: Record<MealType, string> = {
 };
 const STATUS_STYLES: Record<MealPlanStatus, string> = {
   PLANNED: "bg-blue-50 text-blue-700",
-  MADE: "bg-olive-50 text-olive-700",
+  MADE: "bg-terracotta-50 text-terracotta-700",
   SKIPPED: "bg-gray-100 text-gray-400 line-through",
 };
 

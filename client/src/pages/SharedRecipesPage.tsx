@@ -59,7 +59,7 @@ function SaveCopyButton({ recipe, className }: { recipe: SharedRecipe; className
 function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
   return (
     <div className="border rounded-lg p-4 bg-white flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
-      <Link to={`/shared/${recipe.id}`} className="font-semibold text-lg text-olive-800 hover:underline">
+      <Link to={`/shared/${recipe.id}`} className="font-semibold text-lg text-terracotta-800 hover:underline">
         {recipe.name}
       </Link>
       {recipe.description && <p className="text-sm text-gray-600 line-clamp-2">{recipe.description}</p>}
@@ -71,7 +71,7 @@ function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-gray-400">{attributionLabel(recipe)}</span>
         {recipe.saveCount > 0 && (
-          <span className="text-xs font-medium text-olive-700 shrink-0">
+          <span className="text-xs font-medium text-terracotta-700 shrink-0">
             🔁 Saved {recipe.saveCount}×
           </span>
         )}
@@ -85,7 +85,7 @@ function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
           ))}
         </div>
       )}
-      <SaveCopyButton recipe={recipe} className="self-start mt-1 text-sm text-olive-700 hover:underline disabled:opacity-50" />
+      <SaveCopyButton recipe={recipe} className="self-start mt-1 text-sm text-terracotta-700 hover:underline disabled:opacity-50" />
     </div>
   );
 }
@@ -101,7 +101,7 @@ function SharedRecipeRow({ recipe }: { recipe: SharedRecipe }) {
     <li className="flex items-center gap-3 bg-white border rounded px-4 py-2.5">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <Link to={`/shared/${recipe.id}`} className="font-medium text-olive-800 hover:underline truncate">
+          <Link to={`/shared/${recipe.id}`} className="font-medium text-terracotta-800 hover:underline truncate">
             {recipe.name}
           </Link>
           {recipeTags(recipe).map((t) => (
@@ -116,7 +116,7 @@ function SharedRecipeRow({ recipe }: { recipe: SharedRecipe }) {
           {recipe.saveCount > 0 ? ` • Saved ${recipe.saveCount}×` : ""}
         </div>
       </div>
-      <SaveCopyButton recipe={recipe} className="shrink-0 text-sm text-olive-700 hover:underline disabled:opacity-50" />
+      <SaveCopyButton recipe={recipe} className="shrink-0 text-sm text-terracotta-700 hover:underline disabled:opacity-50" />
     </li>
   );
 }
@@ -159,7 +159,7 @@ export function SharedRecipesPage() {
             type="button"
             onClick={() => setSort("popular")}
             className={`px-3 py-1.5 rounded text-sm font-medium ${
-              sort === "popular" ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              sort === "popular" ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             Most popular
@@ -168,7 +168,7 @@ export function SharedRecipesPage() {
             type="button"
             onClick={() => setSort("name")}
             className={`px-3 py-1.5 rounded text-sm font-medium ${
-              sort === "name" ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              sort === "name" ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             Name (A–Z)
@@ -182,7 +182,7 @@ export function SharedRecipesPage() {
               type="button"
               onClick={() => setSelectedTag(null)}
               className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                selectedTag === null ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                selectedTag === null ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               All
@@ -193,7 +193,7 @@ export function SharedRecipesPage() {
                 type="button"
                 onClick={() => setSelectedTag(tag)}
                 className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                  selectedTag === tag ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  selectedTag === tag ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {tag}
@@ -210,7 +210,7 @@ export function SharedRecipesPage() {
             aria-pressed={viewMode === "tile"}
             title="Tile view"
             className={`p-2 rounded ${
-              viewMode === "tile" ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              viewMode === "tile" ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             <TileIcon />
@@ -222,7 +222,7 @@ export function SharedRecipesPage() {
             aria-pressed={viewMode === "list"}
             title="List view"
             className={`p-2 rounded ${
-              viewMode === "list" ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              viewMode === "list" ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             <ListIcon />

@@ -95,7 +95,7 @@ export function FriendsPage() {
           <button
             type="submit"
             disabled={sendRequest.isPending}
-            className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            className="bg-terracotta-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
           >
             Send request
           </button>
@@ -112,7 +112,7 @@ export function FriendsPage() {
                 <span className="flex-1 text-sm">{r.from.name ?? r.from.email}</span>
                 <button
                   onClick={() => acceptRequest.mutate(r.id)}
-                  className="text-sm text-olive-700 hover:underline px-2 py-1"
+                  className="text-sm text-terracotta-700 hover:underline px-2 py-1"
                 >
                   Accept
                 </button>
@@ -155,7 +155,7 @@ export function FriendsPage() {
           {friends?.map((f) => (
             <li key={f.friendshipId} className="flex items-center gap-2 bg-white border rounded px-3 py-2">
               {f.picture && <img src={f.picture} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />}
-              <Link to={`/friends/${f.id}`} className="flex-1 text-sm text-olive-800 hover:underline">
+              <Link to={`/friends/${f.id}`} className="flex-1 text-sm text-terracotta-800 hover:underline">
                 {f.name ?? f.email}
               </Link>
               <button

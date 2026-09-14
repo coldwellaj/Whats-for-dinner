@@ -64,7 +64,7 @@ export function SharedRecipeDetailPage() {
                 type="button"
                 onClick={() => setScale(opt.value)}
                 className={`px-2.5 py-1 rounded text-xs font-medium ${
-                  scale === opt.value ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  scale === opt.value ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {opt.label}
@@ -93,7 +93,7 @@ export function SharedRecipeDetailPage() {
         <div>
           <div className="items-center justify-between gap-2 mb-1">
             <h2 className="font-semibold text-gray-800">Source</h2>
-            <a href={recipe.sourceUrl} target="_blank" rel="noreferrer" className="text-sm text-olive-700 underline">
+            <a href={recipe.sourceUrl} target="_blank" rel="noreferrer" className="text-sm text-terracotta-700 underline">
               Recipe
             </a>
           </div>
@@ -104,7 +104,7 @@ export function SharedRecipeDetailPage() {
         <button
           onClick={() => copyRecipe.mutate(recipe.id)}
           disabled={copyRecipe.isPending}
-          className="px-4 py-2 rounded-md text-sm bg-olive-600 text-white font-medium disabled:opacity-50"
+          className="px-4 py-2 rounded-md text-sm bg-terracotta-600 text-white font-medium disabled:opacity-50"
         >
           {copyRecipe.isSuccess ? "Saved to your recipes ✓" : "+ Save a copy"}
         </button>

@@ -38,7 +38,7 @@ function MyInvitesSection() {
             </span>
             <button
               onClick={() => handleAccept(invite.id)}
-              className="text-sm text-olive-700 hover:underline px-2 py-1"
+              className="text-sm text-terracotta-700 hover:underline px-2 py-1"
             >
               Accept
             </button>
@@ -108,7 +108,7 @@ export function FamilyPage() {
           <button
             type="submit"
             disabled={createFamily.isPending}
-            className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            className="bg-terracotta-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
           >
             Create family
           </button>
@@ -176,7 +176,7 @@ export function FamilyPage() {
         <button
           type="submit"
           disabled={inviteToFamily.isPending}
-          className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+          className="bg-terracotta-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
         >
           Invite
         </button>

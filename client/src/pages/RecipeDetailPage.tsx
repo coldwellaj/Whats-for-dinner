@@ -55,7 +55,7 @@ export function RecipeDetailPage() {
       </div>
 
       {recipe.isShared && (
-        <span className="self-start text-xs font-medium bg-olive-50 text-olive-700 px-2 py-0.5 rounded-full">
+        <span className="self-start text-xs font-medium bg-terracotta-50 text-terracotta-700 px-2 py-0.5 rounded-full">
           🔗 Shared — visible to everyone on Discover
         </span>
       )}
@@ -66,7 +66,7 @@ export function RecipeDetailPage() {
         {recipe.prepTimeMinutes != null && <span>Prep {recipe.prepTimeMinutes}m</span>}
         {recipe.cookTimeMinutes != null && <span>Cook {recipe.cookTimeMinutes}m</span>}
         {recipe.servings != null && <span>Serves {formatQuantity(recipe.servings * scale)}</span>}
-        <span className="font-medium text-olive-700">
+        <span className="font-medium text-terracotta-700">
           {recipe.daysSinceLastMade == null ? "Never made" : `Last made ${recipe.daysSinceLastMade}d ago`}
         </span>
       </div>
@@ -91,7 +91,7 @@ export function RecipeDetailPage() {
                 type="button"
                 onClick={() => setScale(opt.value)}
                 className={`px-2.5 py-1 rounded text-xs font-medium ${
-                  scale === opt.value ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  scale === opt.value ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {opt.label}
@@ -124,7 +124,7 @@ export function RecipeDetailPage() {
               href={recipe.sourceUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-olive-700 underline"
+              className="text-sm text-terracotta-700 underline"
             >
               Recipe
             </a>
@@ -139,7 +139,7 @@ export function RecipeDetailPage() {
         <button
           onClick={() => toggleShare.mutate(recipe.id)}
           className={`px-4 py-2 rounded-md text-sm ${
-            recipe.isShared ? "bg-olive-50 text-olive-700" : "bg-gray-100 text-gray-800"
+            recipe.isShared ? "bg-terracotta-50 text-terracotta-700" : "bg-gray-100 text-gray-800"
           }`}
         >
           {recipe.isShared ? "Make private" : "Make shareable"}
