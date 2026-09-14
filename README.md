@@ -1,4 +1,4 @@
-# Meal Planner
+# What's for Dinner?
 
 A full-stack app for documenting recipes, planning meals for the week, generating a shopping
 list from that plan, favoriting recipes, and tracking how long it's been since each recipe was
