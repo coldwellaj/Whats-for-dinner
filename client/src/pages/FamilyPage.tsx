@@ -54,7 +54,7 @@ export function FamilyPage() {
           <button
             type="submit"
             disabled={createFamily.isPending}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
           >
             Create family
           </button>
@@ -102,7 +102,7 @@ export function FamilyPage() {
         <button
           type="submit"
           disabled={inviteToFamily.isPending}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+          className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
         >
           Invite
         </button>

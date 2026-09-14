@@ -101,7 +101,7 @@ export function IngredientListEditor({ ingredients, onChange }: Props) {
       <button
         type="button"
         onClick={handleAdd}
-        className="self-start text-sm text-emerald-700 hover:underline mt-1"
+        className="self-start text-sm text-olive-700 hover:underline mt-1"
       >
         + Add ingredient
       </button>

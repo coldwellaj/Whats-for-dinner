@@ -158,7 +158,7 @@ export function RecipeFormPage() {
         </div>
 
         <div className="flex gap-2 mt-2">
-          <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+          <button type="submit" className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium">
             {isEditing ? "Save Changes" : "Create Recipe"}
           </button>
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 rounded-md text-sm text-gray-600">

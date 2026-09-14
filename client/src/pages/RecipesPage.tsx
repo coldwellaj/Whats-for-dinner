@@ -14,7 +14,7 @@ export function RecipesPage() {
     <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-gray-800">Recipes</h1>
-        <Link to="/recipes/new" className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+        <Link to="/recipes/new" className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium">
           + New Recipe
         </Link>
       </div>

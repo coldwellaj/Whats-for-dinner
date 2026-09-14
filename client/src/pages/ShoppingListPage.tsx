@@ -136,7 +136,7 @@ export function ShoppingListPage() {
           onChange={(e) => setNewItemUnit(e.target.value)}
           className="w-24 border rounded px-3 py-2 text-base sm:text-sm"
         />
-        <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+        <button type="submit" className="bg-olive-600 text-white px-4 py-2 rounded-md text-sm font-medium">
           Add
         </button>
       </form>

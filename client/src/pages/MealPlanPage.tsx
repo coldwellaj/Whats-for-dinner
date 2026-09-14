@@ -15,7 +15,7 @@ const MEAL_LABELS: Record<MealType, string> = {
 
 const STATUS_STYLES: Record<MealPlanStatus, string> = {
   PLANNED: "bg-blue-50 text-blue-700",
-  MADE: "bg-emerald-50 text-emerald-700",
+  MADE: "bg-olive-50 text-olive-700",
   SKIPPED: "bg-gray-100 text-gray-400 line-through",
 };
 
@@ -79,7 +79,7 @@ export function MealPlanPage() {
           <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="px-3 py-2 border rounded text-sm">
             Next →
           </button>
-          <button onClick={() => setWeekStart(currentWeekStart())} className="px-3 py-2 text-sm text-emerald-700">
+          <button onClick={() => setWeekStart(currentWeekStart())} className="px-3 py-2 text-sm text-olive-700">
             Today
           </button>
         </div>
@@ -106,7 +106,7 @@ export function MealPlanPage() {
                   ))}
                   <button
                     onClick={() => setPickerTarget({ date: day, mealType })}
-                    className="text-xs text-gray-400 hover:text-emerald-600 text-left"
+                    className="text-xs text-gray-400 hover:text-olive-600 text-left"
                   >
                     + Add
                   </button>

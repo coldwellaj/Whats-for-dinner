@@ -59,7 +59,7 @@ export function RecipeDetailPage() {
         {recipe.prepTimeMinutes != null && <span>Prep {recipe.prepTimeMinutes}m</span>}
         {recipe.cookTimeMinutes != null && <span>Cook {recipe.cookTimeMinutes}m</span>}
         {recipe.servings != null && <span>Serves {formatQuantity(recipe.servings * scale)}</span>}
-        <span className="font-medium text-emerald-700">
+        <span className="font-medium text-olive-700">
           {recipe.daysSinceLastMade == null ? "Never made" : `Last made ${recipe.daysSinceLastMade}d ago`}
         </span>
       </div>
@@ -84,7 +84,7 @@ export function RecipeDetailPage() {
                 type="button"
                 onClick={() => setScale(opt.value)}
                 className={`px-2.5 py-1 rounded text-xs font-medium ${
-                  scale === opt.value ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  scale === opt.value ? "bg-olive-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {opt.label}
@@ -117,7 +117,7 @@ export function RecipeDetailPage() {
               href={recipe.sourceUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-emerald-700 underline"
+              className="text-sm text-olive-700 underline"
             >
               Recipe
             </a>

@@ -71,7 +71,7 @@ export function LoginScreen() {
           <button
             type="submit"
             disabled={emailMutation.isPending}
-            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm font-medium rounded-md px-3 py-2 w-full"
+            className="bg-olive-600 hover:bg-olive-700 disabled:opacity-60 text-white text-sm font-medium rounded-md px-3 py-2 w-full"
           >
             {emailMutation.isPending ? "Please wait…" : mode === "login" ? "Sign in" : "Sign up"}
           </button>
@@ -84,7 +84,7 @@ export function LoginScreen() {
         <button
           type="button"
           onClick={toggleMode}
-          className="text-sm text-emerald-700 hover:underline"
+          className="text-sm text-olive-700 hover:underline"
         >
           {mode === "login" ? "Need an account? Sign up" : "Already have an account? Sign in"}
         </button>
