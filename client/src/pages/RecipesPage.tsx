@@ -24,7 +24,7 @@ export function RecipesPage() {
           placeholder="Search recipes or tags..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border rounded px-3 py-2 text-sm flex-1 min-w-[12rem]"
+          className="border rounded px-3 py-2 text-base sm:text-sm flex-1 min-w-[12rem]"
         />
         <label className="flex items-center gap-1.5 text-sm text-gray-700">
           <input type="checkbox" checked={favoriteOnly} onChange={(e) => setFavoriteOnly(e.target.checked)} />

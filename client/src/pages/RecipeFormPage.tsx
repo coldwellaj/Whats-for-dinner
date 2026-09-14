@@ -73,7 +73,7 @@ export function RecipeFormPage() {
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded px-3 py-2 text-base sm:text-sm"
           />
         </div>
 
@@ -82,12 +82,12 @@ export function RecipeFormPage() {
           <textarea
             value={form.description ?? ""}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             rows={2}
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Prep (min)</label>
             <input
@@ -96,7 +96,7 @@ export function RecipeFormPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, prepTimeMinutes: e.target.value === "" ? null : Number(e.target.value) }))
               }
-              className="w-full border rounded px-3 py-2 text-sm"
+              className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             />
           </div>
           <div>
@@ -107,7 +107,7 @@ export function RecipeFormPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, cookTimeMinutes: e.target.value === "" ? null : Number(e.target.value) }))
               }
-              className="w-full border rounded px-3 py-2 text-sm"
+              className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             />
           </div>
           <div>
@@ -118,7 +118,7 @@ export function RecipeFormPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, servings: e.target.value === "" ? null : Number(e.target.value) }))
               }
-              className="w-full border rounded px-3 py-2 text-sm"
+              className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             />
           </div>
         </div>
@@ -133,18 +133,18 @@ export function RecipeFormPage() {
           <textarea
             value={form.instructions ?? ""}
             onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             rows={6}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Source URL</label>
             <input
               value={form.sourceUrl ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, sourceUrl: e.target.value }))}
-              className="w-full border rounded px-3 py-2 text-sm"
+              className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             />
           </div>
           <div>
@@ -152,7 +152,7 @@ export function RecipeFormPage() {
             <input
               value={form.tags ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-              className="w-full border rounded px-3 py-2 text-sm"
+              className="w-full border rounded px-3 py-2 text-base sm:text-sm"
             />
           </div>
         </div>

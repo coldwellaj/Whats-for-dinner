@@ -22,7 +22,7 @@ export function RecipePicker({ onSelect, onClose }: Props) {
             placeholder="Search recipes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border rounded px-3 py-2 text-base sm:text-sm"
           />
         </div>
         <div className="overflow-y-auto flex-1">

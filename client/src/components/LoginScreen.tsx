@@ -33,7 +33,7 @@ export function LoginScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white border rounded-lg shadow-sm p-8 flex flex-col items-center gap-4 w-full max-w-sm">
-        <Logo size={140} />
+        <Logo size={80} />
         <p className="text-sm text-gray-600 text-center">
           {mode === "login" ? "Sign in to see your recipes and meal plan." : "Create an account to get started."}
         </p>
@@ -45,7 +45,7 @@ export function LoginScreen() {
               placeholder="Name (optional)"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="border rounded-md px-3 py-2 text-sm w-full"
+              className="border rounded-md px-3 py-2 text-base sm:text-sm w-full"
               autoComplete="name"
             />
           )}
@@ -54,7 +54,7 @@ export function LoginScreen() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm w-full"
+            className="border rounded-md px-3 py-2 text-base sm:text-sm w-full"
             autoComplete="email"
             required
           />
@@ -63,7 +63,7 @@ export function LoginScreen() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm w-full"
+            className="border rounded-md px-3 py-2 text-base sm:text-sm w-full"
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             minLength={mode === "signup" ? 8 : undefined}
             required

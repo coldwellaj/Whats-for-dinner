@@ -22,13 +22,13 @@ function IngredientRow({
   const listId = `ingredient-suggestions-${index}`;
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <div className="flex flex-wrap gap-2 items-center border rounded-md p-2 sm:border-0 sm:p-0">
       <input
         list={listId}
         placeholder="Ingredient name"
         value={ingredient.name}
         onChange={(e) => onChangeRow(index, { name: e.target.value })}
-        className="flex-1 min-w-[10rem] border rounded px-2 py-1 text-sm"
+        className="w-full sm:w-auto sm:flex-1 sm:min-w-[10rem] border rounded px-2 py-1.5 sm:py-1 text-base sm:text-sm"
       />
       <datalist id={listId}>
         {suggestions?.map((s) => (
@@ -38,7 +38,7 @@ function IngredientRow({
       <select
         value={ingredient.quantity ?? ""}
         onChange={(e) => onChangeRow(index, { quantity: e.target.value === "" ? null : Number(e.target.value) })}
-        className="w-24 border rounded px-2 py-1 text-sm"
+        className="w-24 border rounded px-2 py-1.5 sm:py-1 text-base sm:text-sm"
       >
         <option value="">Qty</option>
         {ingredient.quantity != null && !QUANTITY_OPTIONS.some((o) => Math.abs(o.value - ingredient.quantity!) < 0.001) && (
@@ -53,7 +53,7 @@ function IngredientRow({
       <select
         value={ingredient.unit ?? ""}
         onChange={(e) => onChangeRow(index, { unit: e.target.value })}
-        className="w-28 border rounded px-2 py-1 text-sm"
+        className="w-28 border rounded px-2 py-1.5 sm:py-1 text-base sm:text-sm"
       >
         <option value="">Unit</option>
         {ingredient.unit && !UNIT_OPTIONS.includes(ingredient.unit as (typeof UNIT_OPTIONS)[number]) && (
@@ -69,9 +69,9 @@ function IngredientRow({
         placeholder="Notes"
         value={ingredient.notes ?? ""}
         onChange={(e) => onChangeRow(index, { notes: e.target.value })}
-        className="flex-1 min-w-[8rem] border rounded px-2 py-1 text-sm"
+        className="flex-1 min-w-[8rem] border rounded px-2 py-1.5 sm:py-1 text-base sm:text-sm"
       />
-      <button type="button" onClick={() => onRemove(index)} className="text-red-500 text-sm px-2">
+      <button type="button" onClick={() => onRemove(index)} className="text-red-500 text-sm px-2 py-1.5 sm:py-1 shrink-0">
         Remove
       </button>
     </div>

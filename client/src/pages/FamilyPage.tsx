@@ -44,12 +44,12 @@ export function FamilyPage() {
           Create a family to share your recipes, meal plan, and shopping list with other people. Your existing
           recipes and plans will move into the family.
         </p>
-        <form onSubmit={handleCreate} className="flex gap-2">
+        <form onSubmit={handleCreate} className="flex gap-2 flex-wrap">
           <input
             placeholder="Family name (optional)"
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
-            className="flex-1 border rounded px-3 py-2 text-sm"
+            className="flex-1 min-w-[10rem] border rounded px-3 py-2 text-base sm:text-sm"
           />
           <button
             type="submit"
@@ -82,7 +82,7 @@ export function FamilyPage() {
             {isOwner && member.id !== family.ownerId && (
               <button
                 onClick={() => removeMember.mutate(member.id)}
-                className="text-gray-400 hover:text-red-500 text-sm"
+                className="text-gray-400 hover:text-red-500 text-sm px-2 py-1"
               >
                 Remove
               </button>
@@ -91,13 +91,13 @@ export function FamilyPage() {
         ))}
       </ul>
 
-      <form onSubmit={handleInvite} className="flex gap-2">
+      <form onSubmit={handleInvite} className="flex gap-2 flex-wrap">
         <input
           type="email"
           placeholder="Add by email..."
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
-          className="flex-1 border rounded px-3 py-2 text-sm"
+          className="flex-1 min-w-[10rem] border rounded px-3 py-2 text-base sm:text-sm"
         />
         <button
           type="submit"

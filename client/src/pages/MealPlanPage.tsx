@@ -40,7 +40,7 @@ function MealEntryPill({ entry }: { entry: MealPlanEntry }) {
           {entry.recipe.name}
         </Link>
       </button>
-      <button onClick={() => deleteEntry.mutate(entry.id)} className="text-gray-400 hover:text-red-500">
+      <button onClick={() => deleteEntry.mutate(entry.id)} className="text-gray-400 hover:text-red-500 px-1 -my-1 py-1">
         ×
       </button>
     </div>
@@ -72,14 +72,14 @@ export function MealPlanPage() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-gray-800">Meal Plan</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="px-3 py-1.5 border rounded text-sm">
+          <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="px-3 py-2 border rounded text-sm">
             ← Prev
           </button>
           <span className="text-sm font-medium text-gray-700">{formatWeekRangeLabel(weekStart)}</span>
-          <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="px-3 py-1.5 border rounded text-sm">
+          <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="px-3 py-2 border rounded text-sm">
             Next →
           </button>
-          <button onClick={() => setWeekStart(currentWeekStart())} className="px-3 py-1.5 text-sm text-emerald-700">
+          <button onClick={() => setWeekStart(currentWeekStart())} className="px-3 py-2 text-sm text-emerald-700">
             Today
           </button>
         </div>
@@ -87,7 +87,7 @@ export function MealPlanPage() {
 
       {isLoading && <p className="text-gray-500">Loading meal plan...</p>}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="grid grid-cols-[6rem_repeat(7,minmax(9rem,1fr))] gap-1 min-w-[60rem]">
           <div />
           {days.map((day) => (

@@ -46,11 +46,11 @@ export function ShoppingListPage() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-gray-800">Shopping List</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="px-3 py-1.5 border rounded text-sm">
+          <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="px-3 py-2 border rounded text-sm">
             ← Prev
           </button>
           <span className="text-sm font-medium text-gray-700">{formatWeekRangeLabel(weekStart)}</span>
-          <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="px-3 py-1.5 border rounded text-sm">
+          <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="px-3 py-2 border rounded text-sm">
             Next →
           </button>
         </div>
@@ -65,15 +65,21 @@ export function ShoppingListPage() {
 
       <ul className="flex flex-col gap-1">
         {uncheckedItems.map((item) => (
-          <li key={item.id} className="flex items-center gap-2 bg-white border rounded px-3 py-2">
-            <input
-              type="checkbox"
-              checked={item.isChecked}
-              onChange={(e) => updateItem.mutate({ id: item.id, isChecked: e.target.checked })}
-            />
-            <span className="flex-1 text-sm">{itemLabel(item)}</span>
+          <li key={item.id} className="flex items-center gap-2 bg-white border rounded">
+            <label className="flex-1 flex items-center gap-2 px-3 py-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={item.isChecked}
+                onChange={(e) => updateItem.mutate({ id: item.id, isChecked: e.target.checked })}
+                className="w-4 h-4 shrink-0"
+              />
+              <span className="flex-1 text-sm">{itemLabel(item)}</span>
+            </label>
             {item.isManual && (
-              <button onClick={() => deleteItem.mutate(item.id)} className="text-gray-400 hover:text-red-500 text-sm">
+              <button
+                onClick={() => deleteItem.mutate(item.id)}
+                className="text-gray-400 hover:text-red-500 text-sm px-3 py-2.5"
+              >
                 ×
               </button>
             )}
@@ -86,17 +92,20 @@ export function ShoppingListPage() {
           <p className="text-xs uppercase text-gray-400 font-medium mt-2 mb-1">Checked off</p>
           <ul className="flex flex-col gap-1">
             {checkedItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-2 bg-gray-50 border rounded px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={item.isChecked}
-                  onChange={(e) => updateItem.mutate({ id: item.id, isChecked: e.target.checked })}
-                />
-                <span className="flex-1 text-sm text-gray-400 line-through">{itemLabel(item)}</span>
+              <li key={item.id} className="flex items-center gap-2 bg-gray-50 border rounded">
+                <label className="flex-1 flex items-center gap-2 px-3 py-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={item.isChecked}
+                    onChange={(e) => updateItem.mutate({ id: item.id, isChecked: e.target.checked })}
+                    className="w-4 h-4 shrink-0"
+                  />
+                  <span className="flex-1 text-sm text-gray-400 line-through">{itemLabel(item)}</span>
+                </label>
                 {item.isManual && (
                   <button
                     onClick={() => deleteItem.mutate(item.id)}
-                    className="text-gray-400 hover:text-red-500 text-sm"
+                    className="text-gray-400 hover:text-red-500 text-sm px-3 py-2.5"
                   >
                     ×
                   </button>
@@ -112,20 +121,20 @@ export function ShoppingListPage() {
           placeholder="Add item..."
           value={newItemName}
           onChange={(e) => setNewItemName(e.target.value)}
-          className="flex-1 min-w-[8rem] border rounded px-3 py-2 text-sm"
+          className="flex-1 min-w-[8rem] border rounded px-3 py-2 text-base sm:text-sm"
         />
         <input
           type="number"
           placeholder="Qty"
           value={newItemQty}
           onChange={(e) => setNewItemQty(e.target.value)}
-          className="w-20 border rounded px-3 py-2 text-sm"
+          className="w-20 border rounded px-3 py-2 text-base sm:text-sm"
         />
         <input
           placeholder="Unit"
           value={newItemUnit}
           onChange={(e) => setNewItemUnit(e.target.value)}
-          className="w-24 border rounded px-3 py-2 text-sm"
+          className="w-24 border rounded px-3 py-2 text-base sm:text-sm"
         />
         <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium">
           Add
