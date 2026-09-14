@@ -7,6 +7,8 @@ import { RecipeDetailPage } from "./pages/RecipeDetailPage.js";
 import { MealPlanPage } from "./pages/MealPlanPage.js";
 import { ShoppingListPage } from "./pages/ShoppingListPage.js";
 import { FamilyPage } from "./pages/FamilyPage.js";
+import { SharedRecipesPage } from "./pages/SharedRecipesPage.js";
+import { SharedRecipeDetailPage } from "./pages/SharedRecipeDetailPage.js";
 import { useCurrentUser } from "./api/auth.js";
 
 export default function App() {
@@ -19,7 +21,9 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       <NavBar user={user} />
       <Routes>
-        <Route path="/" element={<RecipesPage />} />
+        <Route path="/" element={<SharedRecipesPage />} />
+        <Route path="/shared/:id" element={<SharedRecipeDetailPage />} />
+        <Route path="/recipes" element={<RecipesPage />} />
         <Route path="/recipes/new" element={<RecipeFormPage />} />
         <Route path="/recipes/:id" element={<RecipeDetailPage />} />
         <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />

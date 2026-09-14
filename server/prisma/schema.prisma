@@ -73,6 +73,8 @@ model Recipe {
   servings         Int?
   sourceUrl        String?
   isFavorite       Boolean            @default(false)
+  isShared         Boolean            @default(false) // shareable: visible to any signed-in user via the Discover page
+  saveCount        Int                @default(0) // times other users have copied this shared recipe; drives Discover's popularity sort
   tags             String? // comma-separated for MVP
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
@@ -83,6 +85,7 @@ model Recipe {
 
   @@index([userId])
   @@index([familyId])
+  @@index([isShared])
 }
 
 model Ingredient {

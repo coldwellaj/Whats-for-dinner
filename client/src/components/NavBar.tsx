@@ -9,7 +9,8 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 const NAV_LINKS: { to: string; label: string; end?: boolean }[] = [
-  { to: "/", label: "Recipes", end: true },
+  { to: "/", label: "Discover", end: true },
+  { to: "/recipes", label: "Recipes" },
   { to: "/plan", label: "Meal Plan" },
   { to: "/shopping-list", label: "Shopping List" },
   { to: "/family", label: "Family" },

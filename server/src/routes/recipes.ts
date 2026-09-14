@@ -72,6 +72,38 @@ recipesRouter.get("/", async (req, res) => {
   res.json(result);
 });
 
+// GET /api/recipes/shared?sort=popular|name — recipes other users/families have marked
+// shareable, excluding ones already in the caller's own scope. Registered before GET /:id
+// so "shared" isn't swallowed as an :id param.
+recipesRouter.get("/shared", async (req, res) => {
+  const orderBy = req.query.sort === "popular" ? [{ saveCount: "desc" as const }, { name: "asc" as const }] : [{ name: "asc" as const }];
+
+  const recipes = await prisma.recipe.findMany({
+    where: { isShared: true, NOT: scopeWhere(req) },
+    include: {
+      ingredients: { include: { ingredient: true } },
+      user: { select: { name: true, email: true } },
+      family: { select: { name: true } },
+    },
+    orderBy,
+  });
+  res.json(recipes);
+});
+
+// GET /api/recipes/shared/:id — view a single shared recipe regardless of scope.
+recipesRouter.get("/shared/:id", async (req, res) => {
+  const recipe = await prisma.recipe.findFirst({
+    where: { id: req.params.id, isShared: true },
+    include: {
+      ingredients: { include: { ingredient: true } },
+      user: { select: { name: true, email: true } },
+      family: { select: { name: true } },
+    },
+  });
+  if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+  res.json(recipe);
+});
+
 recipesRouter.get("/:id", async (req, res) => {
   const recipe = await prisma.recipe.findFirst({
     where: { id: req.params.id, ...scopeWhere(req) },
@@ -181,4 +213,60 @@ recipesRouter.post("/:id/favorite", async (req, res) => {
     data: { isFavorite: !recipe.isFavorite },
   });
   res.json(updated);
+});
+
+// POST /api/recipes/:id/share — toggles whether a recipe you own is shareable.
+recipesRouter.post("/:id/share", async (req, res) => {
+  const recipe = await prisma.recipe.findFirst({ where: { id: req.params.id, ...scopeWhere(req) } });
+  if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+  const updated = await prisma.recipe.update({
+    where: { id: req.params.id },
+    data: { isShared: !recipe.isShared },
+  });
+  res.json(updated);
+});
+
+// POST /api/recipes/:id/copy — duplicates a shared recipe (from any user/family) into
+// the caller's own scope, so they can edit it, favorite it, and plan with it freely.
+recipesRouter.post("/:id/copy", async (req, res) => {
+  const source = await prisma.recipe.findFirst({
+    where: { id: req.params.id, isShared: true },
+    include: { ingredients: true },
+  });
+  if (!source) return res.status(404).json({ error: "Recipe not found" });
+
+  const copy = await prisma.recipe.create({
+    data: {
+      userId: req.userId,
+      familyId: req.familyId,
+      name: source.name,
+      description: source.description,
+      instructions: source.instructions,
+      prepTimeMinutes: source.prepTimeMinutes,
+      cookTimeMinutes: source.cookTimeMinutes,
+      servings: source.servings,
+      sourceUrl: source.sourceUrl,
+      tags: source.tags,
+    },
+  });
+
+  if (source.ingredients.length) {
+    await prisma.recipeIngredient.createMany({
+      data: source.ingredients.map((ri) => ({
+        recipeId: copy.id,
+        ingredientId: ri.ingredientId,
+        quantity: ri.quantity,
+        unit: ri.unit,
+        notes: ri.notes,
+      })),
+    });
+  }
+
+  await prisma.recipe.update({ where: { id: source.id }, data: { saveCount: { increment: 1 } } });
+
+  const full = await prisma.recipe.findUnique({
+    where: { id: copy.id },
+    include: { ingredients: { include: { ingredient: true } } },
+  });
+  res.status(201).json(full);
 });

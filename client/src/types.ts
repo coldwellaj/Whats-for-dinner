@@ -27,12 +27,20 @@ export interface Recipe {
   servings: number | null;
   sourceUrl: string | null;
   isFavorite: boolean;
+  isShared: boolean;
+  saveCount: number;
   tags: string | null;
   createdAt: string;
   updatedAt: string;
   ingredients: RecipeIngredient[];
   lastMadeAt: string | null;
   daysSinceLastMade: number | null;
+}
+
+/** A recipe as seen on the Discover page: someone else's shared recipe, with attribution. */
+export interface SharedRecipe extends Omit<Recipe, "lastMadeAt" | "daysSinceLastMade"> {
+  user: { name: string | null; email: string };
+  family: { name: string | null } | null;
 }
 
 export interface RecipeIngredientInput {

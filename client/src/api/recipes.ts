@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client.js";
-import type { Recipe, RecipeInput } from "../types.js";
+import type { Recipe, RecipeInput, SharedRecipe } from "../types.js";
 
 export function useRecipes(params: { search?: string; favorite?: boolean; sortLastMadeAsc?: boolean } = {}) {
   const query = new URLSearchParams();
@@ -51,5 +51,45 @@ export function useToggleFavorite() {
   return useMutation({
     mutationFn: (id: string) => api.post<Recipe>(`/recipes/${id}/favorite`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] }),
+  });
+}
+
+export function useToggleShare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post<Recipe>(`/recipes/${id}/share`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["shared-recipes"] });
+    },
+  });
+}
+
+export function useSharedRecipes(params: { sort?: "popular" | "name" } = {}) {
+  const query = new URLSearchParams();
+  if (params.sort) query.set("sort", params.sort);
+  const qs = query.toString();
+  return useQuery({
+    queryKey: ["shared-recipes", params],
+    queryFn: () => api.get<SharedRecipe[]>(`/recipes/shared${qs ? `?${qs}` : ""}`),
+  });
+}
+
+export function useSharedRecipe(id: string | undefined) {
+  return useQuery({
+    queryKey: ["shared-recipes", id],
+    queryFn: () => api.get<SharedRecipe>(`/recipes/shared/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useCopyRecipe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post<Recipe>(`/recipes/${id}/copy`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["shared-recipes"] });
+    },
   });
 }
