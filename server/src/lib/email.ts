@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM ?? "What's for Dinner <onboarding@resend.dev>";
+const EMAIL_FROM = process.env.EMAIL_FROM ?? "Rotisserie <onboarding@resend.dev>";
 const APP_URL = process.env.APP_URL ?? "http://localhost:5173";
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
@@ -44,7 +44,7 @@ export async function sendFriendRequestEmail(to: string, fromName: string) {
   const name = escapeHtml(fromName);
   const html = layout(
     "New friend request",
-    `<strong>${name}</strong> wants to be your friend on What's for Dinner. Sign in to accept or decline.`,
+    `<strong>${name}</strong> wants to be your friend on Rotisserie. Sign in to accept or decline.`,
     `${APP_URL}/friends`,
     "View request"
   );
@@ -60,7 +60,7 @@ export async function sendFamilyInviteEmail(
   const href = opts.hasAccount ? `${APP_URL}/family` : `${APP_URL}/?signup=${encodeURIComponent(to)}`;
   const html = layout(
     "Family invite",
-    `<strong>${invitedBy}</strong> invited you to join <strong>${familyName}</strong> on What's for Dinner, sharing recipes, meal plans, and the shopping list.`,
+    `<strong>${invitedBy}</strong> invited you to join <strong>${familyName}</strong> on Rotisserie, sharing recipes, meal plans, and the shopping list.`,
     href,
     opts.hasAccount ? "View invite" : "Sign up to join"
   );
