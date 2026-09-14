@@ -14,7 +14,7 @@ export function NavBar({ user }: { user: CurrentUser }) {
     <nav className="border-b bg-white sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-4 flex items-center gap-2 h-14">
         <span className="mr-4">
-          <Logo size={35} />
+          <Logo size={70} />
         </span>
         <NavLink to="/" end className={linkClass}>
           Recipes

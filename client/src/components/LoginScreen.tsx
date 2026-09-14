@@ -33,7 +33,7 @@ export function LoginScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white border rounded-lg shadow-sm p-8 flex flex-col items-center gap-4 w-full max-w-sm">
-        <Logo size={70} />
+        <Logo size={140} />
         <p className="text-sm text-gray-600 text-center">
           {mode === "login" ? "Sign in to see your recipes and meal plan." : "Create an account to get started."}
         </p>
