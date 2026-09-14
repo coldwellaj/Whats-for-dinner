@@ -33,9 +33,9 @@ function escapeHtml(value: string): string {
 function layout(title: string, bodyHtml: string, ctaHref: string, ctaLabel: string): string {
   return `
     <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h2 style="color: #5c6b2f; margin-bottom: 8px;">${title}</h2>
+      <h2 style="color: #c2410c; margin-bottom: 8px;">${title}</h2>
       <p style="color: #374151; font-size: 14px; line-height: 1.5;">${bodyHtml}</p>
-      <a href="${ctaHref}" style="display: inline-block; margin-top: 16px; background: #5c6b2f; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">${ctaLabel}</a>
+      <a href="${ctaHref}" style="display: inline-block; margin-top: 16px; background: #c2410c; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">${ctaLabel}</a>
     </div>
   `;
 }
