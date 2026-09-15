@@ -3,7 +3,9 @@
 A full-stack app for documenting recipes, planning meals for the week, generating a shopping
 list from that plan, favoriting recipes, and tracking how long it's been since each recipe was
 last made. Recipes can also be marked shareable so other users can discover, view, and copy them
-into their own collection.
+into their own collection. Households can share their recipes, meal plan, and shopping list with
+each other, and friends can (depending on each person's privacy settings) see each other's meal
+plans, recently-made recipes, and recipe lists.
 
 ## Stack
 
@@ -74,6 +76,9 @@ Google":
 - `server/` — Express API, Prisma schema/migrations/seed (`server/prisma/`)
 - `client/` — React app (pages in `client/src/pages`, API hooks in `client/src/api`)
 
+There's no test suite or lint script in this repo — `npm run typecheck` (typechecks server then
+client) is the only automated correctness check.
+
 ## Deploying
 
 The app deploys as two separate Vercel projects from this repo:
@@ -95,8 +100,12 @@ project (the client project only needs `VITE_GOOGLE_CLIENT_ID`).
 - The shopping list for a week is generated from that week's planned meals by summing matching
   ingredients (same name + unit). Checked-off state and manually added items persist per week;
   the recipe-derived portion is recomputed whenever the list is viewed or the plan changes.
-- Recipes are scoped to a family once you're in one (see the Family page); until then they're
-  scoped to you personally. Marking a recipe "shareable" makes it visible to any signed-in user
-  on the Discover page, regardless of scope; saving a copy duplicates it into your own scope as
-  a private, independently editable recipe. `saveCount` (how many times a shared recipe has been
-  copied) drives Discover's "Most popular" sort.
+- Recipes are scoped to a household once you're in one (see the Household page); until then
+  they're scoped to you personally. Marking a recipe "shareable" makes it visible to any
+  signed-in user on the Discover page, regardless of scope; saving a copy duplicates it into your
+  own scope as a private, independently editable recipe. `saveCount` (how many times a shared
+  recipe has been copied) drives Discover's "Most popular" sort.
+- Adding a friend (Friends page) requires the other person to accept your request. Once you're
+  friends, each person's own privacy settings — one each for meal plan, recently-made recipes,
+  and recipe list, independently set to visible to everyone, friends only, or private — decide
+  what the other can see.

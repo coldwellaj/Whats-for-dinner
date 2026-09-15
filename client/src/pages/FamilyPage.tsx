@@ -29,12 +29,12 @@ function MyInvitesSection() {
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="font-semibold text-gray-800">Family invites</h2>
+      <h2 className="font-semibold text-gray-800">Household invites</h2>
       <ul className="flex flex-col gap-1">
         {invites.map((invite) => (
           <li key={invite.id} className="flex items-center gap-2 bg-white border rounded px-3 py-2">
             <span className="flex-1 text-sm">
-              Join <strong>{invite.familyName || "their family"}</strong>
+              Join <strong>{invite.familyName || "their household"}</strong>
             </span>
             <button
               onClick={() => handleAccept(invite.id)}
@@ -92,15 +92,15 @@ export function FamilyPage() {
   if (!family) {
     return (
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Family</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Household</h1>
         <MyInvitesSection />
         <p className="text-sm text-gray-600">
-          Create a family to share your recipes, meal plan, and shopping list with other people. Your existing
-          recipes and plans will move into the family.
+          Create a household to share your recipes, meal plan, and shopping list with other people. Your existing
+          recipes and plans will move into the household.
         </p>
         <form onSubmit={handleCreate} className="flex gap-2 flex-wrap">
           <input
-            placeholder="Family name (optional)"
+            placeholder="Household name (optional)"
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
             className="flex-1 min-w-[10rem] border rounded px-3 py-2 text-base sm:text-sm"
@@ -110,7 +110,7 @@ export function FamilyPage() {
             disabled={createFamily.isPending}
             className="bg-terracotta-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
           >
-            Create family
+            Create household
           </button>
         </form>
       </div>
@@ -121,7 +121,7 @@ export function FamilyPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-gray-800">{family.name || "Your family"}</h1>
+      <h1 className="text-2xl font-bold text-gray-800">{family.name || "Your household"}</h1>
 
       <ul className="flex flex-col gap-1">
         {family.members.map((member) => (

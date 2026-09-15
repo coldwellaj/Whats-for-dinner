@@ -13,7 +13,7 @@ const NAV_LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/recipes", label: "Recipes" },
   { to: "/plan", label: "Meal Plan" },
   { to: "/shopping-list", label: "Shopping List" },
-  { to: "/family", label: "Family" },
+  { to: "/family", label: "Household" },
   { to: "/friends", label: "Friends" },
 ];
 
