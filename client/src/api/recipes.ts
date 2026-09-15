@@ -33,11 +33,26 @@ export function useCreateRecipe() {
   });
 }
 
+// Merges a mutation's response onto the cached recipe detail instead of replacing it outright:
+// /favorite and /share respond with the bare updated row (no `ingredients`, no computed
+// `daysSinceLastMade`), so overwriting the cache with that directly would null out fields the
+// detail page renders unconditionally. Skips entirely if nothing's cached yet — the detail page
+// will fetch the full shape itself once actually visited.
+function patchCachedRecipe(queryClient: ReturnType<typeof useQueryClient>, id: string, patch: Partial<Recipe>) {
+  queryClient.setQueryData<Recipe>(["recipe", id], (old) => (old ? { ...old, ...patch } : old));
+}
+
 export function useUpdateRecipe(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: RecipeInput) => api.put<Recipe>(`/recipes/${id}`, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] }),
+    // The detail query lives under its own "recipe" key (see useRecipe above) so it isn't
+    // swept up by the ["recipes"] list invalidation below — update it directly from the
+    // response instead, or an edit made from the detail page wouldn't show up there.
+    onSuccess: (updated) => {
+      patchCachedRecipe(queryClient, id, updated);
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+    },
   });
 }
 
@@ -45,7 +60,10 @@ export function useDeleteRecipe() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete<void>(`/recipes/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: (_data, id) => {
+      queryClient.removeQueries({ queryKey: ["recipe", id] });
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+    },
   });
 }
 
@@ -53,7 +71,10 @@ export function useToggleFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<Recipe>(`/recipes/${id}/favorite`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: (updated) => {
+      patchCachedRecipe(queryClient, updated.id, updated);
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+    },
   });
 }
 
@@ -61,7 +82,8 @@ export function useToggleShare() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<Recipe>(`/recipes/${id}/share`),
-    onSuccess: () => {
+    onSuccess: (updated) => {
+      patchCachedRecipe(queryClient, updated.id, updated);
       queryClient.invalidateQueries({ queryKey: ["recipes"] });
       queryClient.invalidateQueries({ queryKey: ["shared-recipes"] });
     },

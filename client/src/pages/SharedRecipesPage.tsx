@@ -1,21 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCopyRecipe, useSharedRecipes } from "../api/recipes.js";
+import { useViewMode, ViewModeToggle } from "../components/ViewModeToggle.js";
 import type { SharedRecipe } from "../types.js";
 
 type SortMode = "popular" | "name";
-type ViewMode = "tile" | "list";
-
-const VIEW_MODE_KEY = "discover-view-mode";
-
-function loadViewMode(): ViewMode {
-  try {
-    const stored = localStorage.getItem(VIEW_MODE_KEY);
-    return stored === "list" ? "list" : "tile";
-  } catch {
-    return "tile";
-  }
-}
 
 function attributionLabel(recipe: SharedRecipe): string {
   if (recipe.family?.name) return `Shared by ${recipe.family.name}`;
@@ -24,27 +13,6 @@ function attributionLabel(recipe: SharedRecipe): string {
 
 function recipeTags(recipe: SharedRecipe): string[] {
   return recipe.tags ? recipe.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
-}
-
-function TileIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
-      <rect x="1" y="1" width="6" height="6" rx="1" />
-      <rect x="9" y="1" width="6" height="6" rx="1" />
-      <rect x="1" y="9" width="6" height="6" rx="1" />
-      <rect x="9" y="9" width="6" height="6" rx="1" />
-    </svg>
-  );
-}
-
-function ListIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
-      <rect x="1" y="2" width="14" height="2.5" rx="1" />
-      <rect x="1" y="6.75" width="14" height="2.5" rx="1" />
-      <rect x="1" y="11.5" width="14" height="2.5" rx="1" />
-    </svg>
-  );
 }
 
 function SaveCopyButton({ recipe, className }: { recipe: SharedRecipe; className: string }) {
@@ -58,9 +26,12 @@ function SaveCopyButton({ recipe, className }: { recipe: SharedRecipe; className
 
 function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
   return (
-    <div className="border rounded-lg p-4 bg-white flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
+    <div className="relative border rounded-lg p-4 bg-white flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
       <Link to={`/shared/${recipe.id}`} className="font-semibold text-lg text-terracotta-800 hover:underline">
         {recipe.name}
+        {/* Stretches the link to cover the whole card so the entire tile is clickable, not
+            just the title text — other interactive elements sit above it via z-10. */}
+        <span className="absolute inset-0" aria-hidden="true" />
       </Link>
       {recipe.description && <p className="text-sm text-gray-600 line-clamp-2">{recipe.description}</p>}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
@@ -85,7 +56,10 @@ function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
           ))}
         </div>
       )}
-      <SaveCopyButton recipe={recipe} className="self-start mt-1 text-sm text-terracotta-700 hover:underline disabled:opacity-50" />
+      <SaveCopyButton
+        recipe={recipe}
+        className="relative z-10 self-start mt-1 text-sm text-terracotta-700 hover:underline disabled:opacity-50"
+      />
     </div>
   );
 }
@@ -98,11 +72,12 @@ function SharedRecipeRow({ recipe }: { recipe: SharedRecipe }) {
   ].filter(Boolean);
 
   return (
-    <li className="flex items-center gap-3 bg-white border rounded px-4 py-2.5">
+    <li className="relative flex items-center gap-3 bg-white border rounded px-4 py-2.5">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <Link to={`/shared/${recipe.id}`} className="font-medium text-terracotta-800 hover:underline truncate">
             {recipe.name}
+            <span className="absolute inset-0" aria-hidden="true" />
           </Link>
           {recipeTags(recipe).map((t) => (
             <span key={t} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full shrink-0">
@@ -116,7 +91,10 @@ function SharedRecipeRow({ recipe }: { recipe: SharedRecipe }) {
           {recipe.saveCount > 0 ? ` • Saved ${recipe.saveCount}×` : ""}
         </div>
       </div>
-      <SaveCopyButton recipe={recipe} className="shrink-0 text-sm text-terracotta-700 hover:underline disabled:opacity-50" />
+      <SaveCopyButton
+        recipe={recipe}
+        className="relative z-10 shrink-0 text-sm text-terracotta-700 hover:underline disabled:opacity-50"
+      />
     </li>
   );
 }
@@ -124,16 +102,8 @@ function SharedRecipeRow({ recipe }: { recipe: SharedRecipe }) {
 export function SharedRecipesPage() {
   const [sort, setSort] = useState<SortMode>("popular");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>(loadViewMode);
+  const [viewMode, setViewMode] = useViewMode("discover-view-mode");
   const { data: recipes, isLoading, error } = useSharedRecipes({ sort });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(VIEW_MODE_KEY, viewMode);
-    } catch {
-      // per-viewer convenience only; fine if it can't persist
-    }
-  }, [viewMode]);
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -202,32 +172,7 @@ export function SharedRecipesPage() {
           </div>
         )}
 
-        <div className="flex gap-1 ml-auto">
-          <button
-            type="button"
-            onClick={() => setViewMode("tile")}
-            aria-label="Tile view"
-            aria-pressed={viewMode === "tile"}
-            title="Tile view"
-            className={`p-2 rounded ${
-              viewMode === "tile" ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <TileIcon />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("list")}
-            aria-label="List view"
-            aria-pressed={viewMode === "list"}
-            title="List view"
-            className={`p-2 rounded ${
-              viewMode === "list" ? "bg-terracotta-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <ListIcon />
-          </button>
-        </div>
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
 
       {isLoading && <p className="text-gray-500">Loading shared recipes...</p>}

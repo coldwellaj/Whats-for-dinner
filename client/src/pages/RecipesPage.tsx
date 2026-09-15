@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useRecipes } from "../api/recipes.js";
-import { RecipeCard } from "../components/RecipeCard.js";
+import { RecipeCard, RecipeListRow } from "../components/RecipeCard.js";
+import { useViewMode, ViewModeToggle } from "../components/ViewModeToggle.js";
 
 export function RecipesPage() {
   const [search, setSearch] = useState("");
   const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [sortLastMadeAsc, setSortLastMadeAsc] = useState(false);
+  const [viewMode, setViewMode] = useViewMode("recipes-view-mode");
 
   const { data: recipes, isLoading, error } = useRecipes({ search, favorite: favoriteOnly, sortLastMadeAsc });
 
@@ -38,6 +40,7 @@ export function RecipesPage() {
           />
           Least recently made first
         </label>
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
 
       {isLoading && <p className="text-gray-500">Loading recipes...</p>}
@@ -46,11 +49,19 @@ export function RecipesPage() {
         <p className="text-gray-500">No recipes yet. Create your first one to get started.</p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {recipes?.map((r) => (
-          <RecipeCard key={r.id} recipe={r} />
-        ))}
-      </div>
+      {viewMode === "tile" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {recipes?.map((r) => (
+            <RecipeCard key={r.id} recipe={r} />
+          ))}
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {recipes?.map((r) => (
+            <RecipeListRow key={r.id} recipe={r} />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
