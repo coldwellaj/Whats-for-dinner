@@ -19,6 +19,11 @@ visibility settings) see each other's meal plans, recently-made recipes, and rec
 
 This is an npm workspaces monorepo (`server`, `client`).
 
+## Working with the user
+
+- Never run `git commit` or `git push` on the user's behalf. Leave changes staged/unstaged in
+  the working tree and let the user commit and push themselves.
+
 ## Commands
 
 Run from the repo root unless noted:
