@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCopyRecipe, useSharedRecipe } from "../api/recipes.js";
+import { RecipePhoto } from "../components/RecipePhoto.js";
 import { formatQuantity } from "../lib/units.js";
 import type { SharedRecipe } from "../types.js";
 
@@ -31,6 +32,8 @@ export function SharedRecipeDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+      <RecipePhoto recipeId={recipe.id} hasPhoto={recipe.hasPhoto} className="w-full h-64 object-cover rounded-lg" />
+
       <h1 className="text-2xl font-bold text-gray-800">{recipe.name}</h1>
       <span className="self-start text-xs font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
         {attributionLabel(recipe)}

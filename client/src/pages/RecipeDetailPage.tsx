@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDeleteRecipe, useRecipe, useToggleFavorite, useToggleShare } from "../api/recipes.js";
+import { RecipePhoto } from "../components/RecipePhoto.js";
 import { formatQuantity } from "../lib/units.js";
 
 const SCALE_OPTIONS = [
@@ -43,6 +44,8 @@ export function RecipeDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+      <RecipePhoto recipeId={recipe.id} hasPhoto={recipe.hasPhoto} className="w-full h-64 object-cover rounded-lg" />
+
       <div className="flex items-start justify-between gap-2">
         <h1 className="text-2xl font-bold text-gray-800">{recipe.name}</h1>
         <button
