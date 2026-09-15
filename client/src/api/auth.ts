@@ -54,6 +54,17 @@ export function useEmailLogin() {
   });
 }
 
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name?: string; picture?: string | null }) =>
+      api.put<{ user: CurrentUser }>("/auth/me", data),
+    onSuccess: ({ user }) => {
+      queryClient.setQueryData(["auth", "me"], user);
+    },
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({

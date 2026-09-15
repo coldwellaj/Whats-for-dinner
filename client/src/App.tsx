@@ -12,6 +12,7 @@ import { SharedRecipesPage } from "./pages/SharedRecipesPage.js";
 import { SharedRecipeDetailPage } from "./pages/SharedRecipeDetailPage.js";
 import { FriendsPage } from "./pages/FriendsPage.js";
 import { FriendActivityPage } from "./pages/FriendActivityPage.js";
+import { AccountPage } from "./pages/AccountPage.js";
 import { useCurrentUser } from "./api/auth.js";
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/family" element={<FamilyPage />} />
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/friends/:id" element={<FriendActivityPage />} />
+        <Route path="/account" element={<AccountPage />} />
       </Routes>
       <Footer />
     </div>

@@ -156,6 +156,48 @@ authRouter.get("/me", requireAuth, async (req, res) => {
   res.json({ user: toUserJson(user) });
 });
 
+const NAME_MAX_LENGTH = 100;
+const MAX_PICTURE_BYTES = 500_000;
+// Client resizes/compresses to a small JPEG before sending; this just re-validates shape
+// and enforces a hard ceiling server-side, since this endpoint can also be called directly.
+const PICTURE_DATA_URL_RE = /^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/]+=*)$/;
+
+// PUT /api/auth/me  { name?, picture? } — updates the caller's own display name and/or
+// profile picture. Either field may be omitted to leave it unchanged; picture may be set to
+// null to remove it.
+authRouter.put("/me", requireAuth, async (req, res) => {
+  const { name, picture } = req.body as { name?: string | null; picture?: string | null };
+
+  const data: { name?: string | null; picture?: string | null } = {};
+
+  if (name !== undefined) {
+    const trimmed = (name ?? "").trim();
+    if (trimmed.length > NAME_MAX_LENGTH) {
+      return res.status(400).json({ error: `Name must be ${NAME_MAX_LENGTH} characters or fewer` });
+    }
+    data.name = trimmed || null;
+  }
+
+  if (picture !== undefined) {
+    if (picture === null) {
+      data.picture = null;
+    } else {
+      const match = PICTURE_DATA_URL_RE.exec(picture);
+      if (!match) {
+        return res.status(400).json({ error: "Picture must be a PNG, JPEG, or WEBP image" });
+      }
+      const approxBytes = Math.floor((match[2].length * 3) / 4);
+      if (approxBytes > MAX_PICTURE_BYTES) {
+        return res.status(400).json({ error: "Picture is too large (max 500KB)" });
+      }
+      data.picture = picture;
+    }
+  }
+
+  const user = await prisma.user.update({ where: { id: req.userId }, data });
+  res.json({ user: toUserJson(user) });
+});
+
 function toUserJson(user: { id: string; email: string; name: string | null; picture: string | null; familyId: string | null }) {
   return { id: user.id, email: user.email, name: user.name, picture: user.picture, familyId: user.familyId };
 }

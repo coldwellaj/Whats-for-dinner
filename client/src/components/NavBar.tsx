@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useLogout, type CurrentUser } from "../api/auth.js";
 import { Logo } from "./Logo.js";
 
@@ -38,10 +38,12 @@ export function NavBar({ user }: { user: CurrentUser }) {
         </div>
 
         <div className="flex items-center gap-2 ml-auto shrink-0">
-          {user.picture && (
-            <img src={user.picture} alt="" className="w-7 h-7 rounded-full" referrerPolicy="no-referrer" />
-          )}
-          <span className="text-sm text-gray-600 hidden sm:inline">{user.name ?? user.email}</span>
+          <Link to="/account" className="flex items-center gap-2 hover:opacity-80">
+            {user.picture && (
+              <img src={user.picture} alt="" className="w-7 h-7 rounded-full object-cover" referrerPolicy="no-referrer" />
+            )}
+            <span className="text-sm text-gray-600 hidden sm:inline">{user.name ?? user.email}</span>
+          </Link>
           <button
             type="button"
             onClick={() => logout.mutate()}
@@ -76,6 +78,9 @@ export function NavBar({ user }: { user: CurrentUser }) {
               {link.label}
             </NavLink>
           ))}
+          <NavLink to="/account" className={linkClass} onClick={() => setMenuOpen(false)}>
+            Account
+          </NavLink>
         </div>
       )}
     </nav>
