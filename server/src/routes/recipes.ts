@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import { prisma } from "../db.js";
+import { prisma, Prisma } from "../db.js";
 import { getLastMadeForRecipe, getLastMadeForRecipes } from "../lib/lastMade.js";
 import { scopeWhere } from "../middleware/requireAuth.js";
 
@@ -26,16 +26,32 @@ type IngredientInput = {
   notes?: string | null;
 };
 
+// Finds or creates the shared Ingredient row for a name. `upsert` alone isn't safe here:
+// two requests creating a recipe with the same brand-new ingredient name can both miss the
+// SELECT and then race on the INSERT, so the loser's upsert throws a P2002 unique-constraint
+// error instead of falling back to the row the winner just created. Catch that one case and
+// re-fetch instead of letting it propagate.
+async function findOrCreateIngredient(name: string, defaultUnit: string | null) {
+  try {
+    return await prisma.ingredient.upsert({
+      where: { name },
+      update: {},
+      create: { name, defaultUnit },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return prisma.ingredient.findUniqueOrThrow({ where: { name } });
+    }
+    throw err;
+  }
+}
+
 async function upsertIngredientsForRecipe(recipeId: string, ingredients: IngredientInput[]) {
   await prisma.recipeIngredient.deleteMany({ where: { recipeId } });
   for (const ing of ingredients) {
     const name = ing.name.trim();
     if (!name) continue;
-    const ingredient = await prisma.ingredient.upsert({
-      where: { name },
-      update: {},
-      create: { name, defaultUnit: ing.unit ?? null },
-    });
+    const ingredient = await findOrCreateIngredient(name, ing.unit ?? null);
     await prisma.recipeIngredient.create({
       data: {
         recipeId,

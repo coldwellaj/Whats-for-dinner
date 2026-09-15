@@ -20,6 +20,7 @@ export function useAddManualItem(weekStart: string) {
 
 export function useUpdateShoppingListItem(weekStart: string) {
   const queryClient = useQueryClient();
+  const queryKey = ["shopping-list", weekStart];
   return useMutation({
     mutationFn: ({
       id,
@@ -31,7 +32,20 @@ export function useUpdateShoppingListItem(weekStart: string) {
       quantity?: number | null;
       unit?: string | null;
     }) => api.put<ShoppingListItem>(`/shopping-list/items/${id}`, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shopping-list", weekStart] }),
+    // Applies the edit to the cached list immediately (e.g. so a checkbox toggles instantly
+    // instead of waiting on the PUT round-trip), rolling back if the request fails.
+    onMutate: async ({ id, ...data }) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<ShoppingListItem[]>(queryKey);
+      queryClient.setQueryData<ShoppingListItem[]>(queryKey, (old) =>
+        old?.map((item) => (item.id === id ? { ...item, ...data } : item))
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });
 }
 

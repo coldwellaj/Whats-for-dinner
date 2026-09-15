@@ -1,4 +1,5 @@
-import express from "express";
+import "express-async-errors";
+import express, { type ErrorRequestHandler } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { recipesRouter } from "./routes/recipes.js";
@@ -27,3 +28,11 @@ app.use("/api/recipes", recipesRouter);
 app.use("/api/ingredients", ingredientsRouter);
 app.use("/api/meal-plan", mealPlanRouter);
 app.use("/api/shopping-list", shoppingListRouter);
+
+// Catches errors from every route above (express-async-errors forwards async rejections
+// here too) so a single bad request returns a 500 instead of crashing the whole process.
+const handleError: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: "Internal server error" });
+};
+app.use(handleError);

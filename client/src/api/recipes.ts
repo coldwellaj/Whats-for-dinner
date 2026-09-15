@@ -16,7 +16,10 @@ export function useRecipes(params: { search?: string; favorite?: boolean; sortLa
 
 export function useRecipe(id: string | undefined) {
   return useQuery({
-    queryKey: ["recipes", id],
+    // Deliberately "recipe" (singular), not "recipes" — every recipe-list mutation below
+    // invalidates the ["recipes"] prefix, which would otherwise also match this single-recipe
+    // query and force it to refetch (e.g. right after a delete, 404ing and retrying).
+    queryKey: ["recipe", id],
     queryFn: () => api.get<Recipe>(`/recipes/${id}`),
     enabled: !!id,
   });

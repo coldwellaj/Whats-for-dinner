@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCreateMealPlanEntry, useDeleteMealPlanEntry, useMealPlan, useUpdateMealPlanEntry } from "../api/mealPlan.js";
 import { RecipePicker } from "../components/RecipePicker.js";
@@ -54,6 +54,7 @@ export function MealPlanPage() {
   const weekEnd = addDays(weekStart, 7);
   const { data: entries, isLoading } = useMealPlan(weekStart, weekEnd);
   const createEntry = useCreateMealPlanEntry();
+  const isSelectingRecipe = useRef(false);
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -62,9 +63,17 @@ export function MealPlanPage() {
   }
 
   async function handleSelectRecipe(recipeId: string) {
-    if (!pickerTarget) return;
-    await createEntry.mutateAsync({ date: pickerTarget.date, mealType: pickerTarget.mealType, recipeId });
-    setPickerTarget(null);
+    // Guards against a duplicate entry being created if the picker registers two selections
+    // (double click, or a second click before the first mutation's pending state re-renders
+    // the picker's disabled buttons) before the first mutateAsync resolves.
+    if (!pickerTarget || isSelectingRecipe.current) return;
+    isSelectingRecipe.current = true;
+    try {
+      await createEntry.mutateAsync({ date: pickerTarget.date, mealType: pickerTarget.mealType, recipeId });
+      setPickerTarget(null);
+    } finally {
+      isSelectingRecipe.current = false;
+    }
   }
 
   return (
@@ -117,7 +126,13 @@ export function MealPlanPage() {
         </div>
       </div>
 
-      {pickerTarget && <RecipePicker onSelect={handleSelectRecipe} onClose={() => setPickerTarget(null)} />}
+      {pickerTarget && (
+        <RecipePicker
+          onSelect={handleSelectRecipe}
+          onClose={() => setPickerTarget(null)}
+          disabled={createEntry.isPending}
+        />
+      )}
     </div>
   );
 }

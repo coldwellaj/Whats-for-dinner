@@ -4,9 +4,10 @@ import { useRecipes } from "../api/recipes.js";
 interface Props {
   onSelect: (recipeId: string) => void;
   onClose: () => void;
+  disabled?: boolean;
 }
 
-export function RecipePicker({ onSelect, onClose }: Props) {
+export function RecipePicker({ onSelect, onClose, disabled }: Props) {
   const [search, setSearch] = useState("");
   const { data: recipes, isLoading } = useRecipes({ search, sortLastMadeAsc: true });
 
@@ -32,7 +33,8 @@ export function RecipePicker({ onSelect, onClose }: Props) {
             <button
               key={r.id}
               onClick={() => onSelect(r.id)}
-              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b flex items-center justify-between gap-2"
+              disabled={disabled}
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b flex items-center justify-between gap-2 disabled:opacity-50 disabled:pointer-events-none"
             >
               <span className="font-medium">
                 {r.isFavorite ? "❤️ " : ""}

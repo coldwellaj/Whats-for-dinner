@@ -76,8 +76,11 @@ Google":
 - `server/` — Express API, Prisma schema/migrations/seed (`server/prisma/`)
 - `client/` — React app (pages in `client/src/pages`, API hooks in `client/src/api`)
 
-There's no test suite or lint script in this repo — `npm run typecheck` (typechecks server then
-client) is the only automated correctness check.
+There's no automated test suite or lint script in this repo — `npm run typecheck` (typechecks
+server then client) is the only automated correctness check. For manual QA, the `qa-tester`
+Claude Code subagent (`.claude/agents/qa-tester.md`) drives the running app in a real headless
+browser via `@playwright/test` (a root devDependency, used only for this — there are no committed
+`.spec` files) and reports back bugs with repro steps.
 
 ## Deploying
 
