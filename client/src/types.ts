@@ -35,6 +35,9 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   lastMadeAt: string | null;
   daysSinceLastMade: number | null;
+  // The photo itself is served separately (GET /api/recipes/:id/photo), never inlined in this
+  // JSON — hasPhoto is just enough for the client to know whether to render that <img src>.
+  hasPhoto: boolean;
 }
 
 /** A recipe as seen on the Discover page: someone else's shared recipe, with attribution. */
@@ -60,6 +63,8 @@ export interface RecipeInput {
   sourceUrl?: string | null;
   tags?: string | null;
   ingredients: RecipeIngredientInput[];
+  /** Data URL to set/replace the photo, null to remove it, or omitted to leave it unchanged. */
+  photo?: string | null;
 }
 
 export interface MealPlanEntry {

@@ -14,9 +14,10 @@ import { requireAuth } from "./middleware/requireAuth.js";
 export const app = express();
 
 app.use(cors());
-// Default 100kb is too small for a profile-picture data URL; auth.ts's PUT /me caps the
-// actual decoded image at 500KB, this just gives the base64 + JSON overhead room to arrive.
-app.use(express.json({ limit: "1mb" }));
+// Default 100kb is too small for a picture/photo data URL. The largest payload is a recipe
+// photo (recipes.ts caps the decoded image at 1.5MB); this gives the base64 + JSON overhead
+// room to arrive with headroom to spare.
+app.use(express.json({ limit: "3mb" }));
 app.use(cookieParser());
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));

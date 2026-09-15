@@ -1,40 +1,10 @@
 import { useEffect, useState } from "react";
 import { useCurrentUser, useUpdateProfile } from "../api/auth.js";
+import { resizeImageToDataUrl } from "../lib/images.js";
 
 const AVATAR_MAX_DIMENSION = 256;
 const AVATAR_JPEG_QUALITY = 0.85;
 const MAX_SOURCE_FILE_BYTES = 10_000_000;
-
-// Downscales/re-encodes to a small JPEG data URL client-side so the picture is cheap enough
-// to store directly on the User row (see server/src/routes/auth.ts's PUT /me for the
-// server-side size cap this is meant to stay well under).
-function resizeImageToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error ?? new Error("Could not read file"));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("Could not read image"));
-      img.onload = () => {
-        const scale = Math.min(1, AVATAR_MAX_DIMENSION / Math.max(img.width, img.height));
-        const width = Math.round(img.width * scale) || 1;
-        const height = Math.round(img.height * scale) || 1;
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Canvas not supported"));
-          return;
-        }
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", AVATAR_JPEG_QUALITY));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 export function AccountPage() {
   const { data: user } = useCurrentUser();
@@ -70,7 +40,7 @@ export function AccountPage() {
     }
     setProcessingImage(true);
     try {
-      setPicturePreview(await resizeImageToDataUrl(file));
+      setPicturePreview(await resizeImageToDataUrl(file, AVATAR_MAX_DIMENSION, AVATAR_JPEG_QUALITY));
       setPictureChanged(true);
     } catch {
       setError("Could not process that image");

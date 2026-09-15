@@ -26,6 +26,60 @@ type IngredientInput = {
   notes?: string | null;
 };
 
+// Every recipe query that gets sent to the client (list, detail, or a mutation's response)
+// must select fields explicitly rather than `include` (which pulls in every scalar column,
+// including the photo bytes — see the schema comment on Recipe.photo). This project pins
+// Prisma 5.x, whose generated client predates the (later-GA) Omit API, so explicit `select`
+// is the safe way to exclude a column on this version rather than `include` + `omit`.
+const RECIPE_SELECT_BASE = {
+  id: true,
+  userId: true,
+  familyId: true,
+  name: true,
+  description: true,
+  instructions: true,
+  prepTimeMinutes: true,
+  cookTimeMinutes: true,
+  servings: true,
+  sourceUrl: true,
+  isFavorite: true,
+  isShared: true,
+  saveCount: true,
+  tags: true,
+  createdAt: true,
+  updatedAt: true,
+  hasPhoto: true,
+} satisfies Prisma.RecipeSelect;
+
+const MAX_PHOTO_BYTES = 1_500_000;
+const PHOTO_DATA_URL_RE = /^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/]+=*)$/;
+
+type PhotoParseResult = { ok: true; buffer: Buffer; mimeType: string } | { ok: false; error: string };
+
+function parsePhoto(dataUrl: string): PhotoParseResult {
+  const match = PHOTO_DATA_URL_RE.exec(dataUrl);
+  if (!match) return { ok: false, error: "Photo must be a PNG, JPEG, or WEBP image" };
+  const buffer = Buffer.from(match[2], "base64");
+  if (buffer.byteLength > MAX_PHOTO_BYTES) return { ok: false, error: "Photo is too large (max 1.5MB)" };
+  const format = match[1] === "jpg" ? "jpeg" : match[1];
+  return { ok: true, buffer, mimeType: `image/${format}` };
+}
+
+type PhotoUpdateResult =
+  | { kind: "unchanged" }
+  | { kind: "set"; data: { photo: Buffer | null; photoType: string | null; hasPhoto: boolean } }
+  | { kind: "error"; error: string };
+
+// Resolves an optional `photo` field (a data URL, or null to remove it, or undefined to leave
+// it unchanged) from a request body into the Prisma data fragment to apply.
+function resolvePhotoUpdate(photo: string | null | undefined): PhotoUpdateResult {
+  if (photo === undefined) return { kind: "unchanged" };
+  if (photo === null) return { kind: "set", data: { photo: null, photoType: null, hasPhoto: false } };
+  const parsed = parsePhoto(photo);
+  if (!parsed.ok) return { kind: "error", error: parsed.error };
+  return { kind: "set", data: { photo: parsed.buffer, photoType: parsed.mimeType, hasPhoto: true } };
+}
+
 // Finds or creates the shared Ingredient row for a name. `upsert` alone isn't safe here:
 // two requests creating a recipe with the same brand-new ingredient name can both miss the
 // SELECT and then race on the INSERT, so the loser's upsert throws a P2002 unique-constraint
@@ -82,7 +136,7 @@ recipesRouter.get("/", async (req, res) => {
           }
         : {}),
     },
-    include: { ingredients: { include: { ingredient: true } } },
+    select: { ...RECIPE_SELECT_BASE, ingredients: { include: { ingredient: true } } },
     orderBy: { name: "asc" },
   });
 
@@ -110,7 +164,8 @@ recipesRouter.get("/shared", async (req, res) => {
 
   const recipes = await prisma.recipe.findMany({
     where: { isShared: true, ...excludeOwnScope(req) },
-    include: {
+    select: {
+      ...RECIPE_SELECT_BASE,
       ingredients: { include: { ingredient: true } },
       user: { select: { name: true, email: true } },
       family: { select: { name: true } },
@@ -124,7 +179,8 @@ recipesRouter.get("/shared", async (req, res) => {
 recipesRouter.get("/shared/:id", async (req, res) => {
   const recipe = await prisma.recipe.findFirst({
     where: { id: req.params.id, isShared: true },
-    include: {
+    select: {
+      ...RECIPE_SELECT_BASE,
       ingredients: { include: { ingredient: true } },
       user: { select: { name: true, email: true } },
       family: { select: { name: true } },
@@ -134,10 +190,24 @@ recipesRouter.get("/shared/:id", async (req, res) => {
   res.json(recipe);
 });
 
+// GET /api/recipes/:id/photo — serves the recipe's photo as a real image response, not
+// embedded in any JSON payload, so tiles can use a normal, browser-cacheable <img src>.
+// Viewable by anyone who could view the recipe itself: own scope, or shared to everyone.
+recipesRouter.get("/:id/photo", async (req, res) => {
+  const recipe = await prisma.recipe.findFirst({
+    where: { id: req.params.id, OR: [scopeWhere(req), { isShared: true }] },
+    select: { photo: true, photoType: true },
+  });
+  if (!recipe?.photo) return res.status(404).end();
+  res.set("Content-Type", recipe.photoType ?? "image/jpeg");
+  res.set("Cache-Control", "private, max-age=31536000, immutable");
+  res.send(recipe.photo);
+});
+
 recipesRouter.get("/:id", async (req, res) => {
   const recipe = await prisma.recipe.findFirst({
     where: { id: req.params.id, ...scopeWhere(req) },
-    include: { ingredients: { include: { ingredient: true } } },
+    select: { ...RECIPE_SELECT_BASE, ingredients: { include: { ingredient: true } } },
   });
   if (!recipe) return res.status(404).json({ error: "Recipe not found" });
   const lastMade = await getLastMadeForRecipe(scopeWhere(req), recipe.id);
@@ -145,7 +215,7 @@ recipesRouter.get("/:id", async (req, res) => {
 });
 
 recipesRouter.post("/", async (req, res) => {
-  const { name, description, instructions, prepTimeMinutes, cookTimeMinutes, servings, sourceUrl, tags, ingredients } =
+  const { name, description, instructions, prepTimeMinutes, cookTimeMinutes, servings, sourceUrl, tags, ingredients, photo } =
     req.body as {
       name: string;
       description?: string;
@@ -156,10 +226,16 @@ recipesRouter.post("/", async (req, res) => {
       sourceUrl?: string;
       tags?: string;
       ingredients?: IngredientInput[];
+      photo?: string | null;
     };
 
   if (!name || !name.trim()) {
     return res.status(400).json({ error: "Recipe name is required" });
+  }
+
+  const photoUpdate = resolvePhotoUpdate(photo);
+  if (photoUpdate.kind === "error") {
+    return res.status(400).json({ error: photoUpdate.error });
   }
 
   const recipe = await prisma.recipe.create({
@@ -174,6 +250,7 @@ recipesRouter.post("/", async (req, res) => {
       servings: servings ?? null,
       sourceUrl: sourceUrl ?? null,
       tags: tags ?? null,
+      ...(photoUpdate.kind === "set" ? photoUpdate.data : {}),
     },
   });
 
@@ -183,7 +260,7 @@ recipesRouter.post("/", async (req, res) => {
 
   const full = await prisma.recipe.findUnique({
     where: { id: recipe.id },
-    include: { ingredients: { include: { ingredient: true } } },
+    select: { ...RECIPE_SELECT_BASE, ingredients: { include: { ingredient: true } } },
   });
   res.status(201).json(full);
 });
@@ -192,7 +269,7 @@ recipesRouter.put("/:id", async (req, res) => {
   const existing = await prisma.recipe.findFirst({ where: { id: req.params.id, ...scopeWhere(req) } });
   if (!existing) return res.status(404).json({ error: "Recipe not found" });
 
-  const { name, description, instructions, prepTimeMinutes, cookTimeMinutes, servings, sourceUrl, tags, ingredients } =
+  const { name, description, instructions, prepTimeMinutes, cookTimeMinutes, servings, sourceUrl, tags, ingredients, photo } =
     req.body as {
       name?: string;
       description?: string;
@@ -203,7 +280,13 @@ recipesRouter.put("/:id", async (req, res) => {
       sourceUrl?: string;
       tags?: string;
       ingredients?: IngredientInput[];
+      photo?: string | null;
     };
+
+  const photoUpdate = resolvePhotoUpdate(photo);
+  if (photoUpdate.kind === "error") {
+    return res.status(400).json({ error: photoUpdate.error });
+  }
 
   await prisma.recipe.update({
     where: { id: req.params.id },
@@ -216,6 +299,7 @@ recipesRouter.put("/:id", async (req, res) => {
       ...(servings !== undefined ? { servings } : {}),
       ...(sourceUrl !== undefined ? { sourceUrl } : {}),
       ...(tags !== undefined ? { tags } : {}),
+      ...(photoUpdate.kind === "set" ? photoUpdate.data : {}),
     },
   });
 
@@ -225,7 +309,7 @@ recipesRouter.put("/:id", async (req, res) => {
 
   const full = await prisma.recipe.findUnique({
     where: { id: req.params.id },
-    include: { ingredients: { include: { ingredient: true } } },
+    select: { ...RECIPE_SELECT_BASE, ingredients: { include: { ingredient: true } } },
   });
   res.json(full);
 });
@@ -241,6 +325,7 @@ recipesRouter.post("/:id/favorite", async (req, res) => {
   const updated = await prisma.recipe.update({
     where: { id: req.params.id },
     data: { isFavorite: !recipe.isFavorite },
+    select: RECIPE_SELECT_BASE,
   });
   res.json(updated);
 });
@@ -252,6 +337,7 @@ recipesRouter.post("/:id/share", async (req, res) => {
   const updated = await prisma.recipe.update({
     where: { id: req.params.id },
     data: { isShared: !recipe.isShared },
+    select: RECIPE_SELECT_BASE,
   });
   res.json(updated);
 });
@@ -277,6 +363,9 @@ recipesRouter.post("/:id/copy", async (req, res) => {
       servings: source.servings,
       sourceUrl: source.sourceUrl,
       tags: source.tags,
+      photo: source.photo,
+      photoType: source.photoType,
+      hasPhoto: source.hasPhoto,
     },
   });
 
@@ -296,7 +385,7 @@ recipesRouter.post("/:id/copy", async (req, res) => {
 
   const full = await prisma.recipe.findUnique({
     where: { id: copy.id },
-    include: { ingredients: { include: { ingredient: true } } },
+    select: { ...RECIPE_SELECT_BASE, ingredients: { include: { ingredient: true } } },
   });
   res.status(201).json(full);
 });

@@ -104,6 +104,13 @@ model Recipe {
   isShared         Boolean            @default(false) // shareable: visible to any signed-in user via the Discover page
   saveCount        Int                @default(0) // times other users have copied this shared recipe; drives Discover's popularity sort
   tags             String? // comma-separated for MVP
+  // Photo bytes are deliberately excluded from every list/detail query (see recipes.ts) and
+  // served instead via GET /:id/photo, so list responses (which can include dozens of
+  // recipes) stay small and the browser can cache each image like a normal <img src>. hasPhoto
+  // lets the client know whether to render that <img> at all without fetching the bytes.
+  photo            Bytes?
+  photoType        String?
+  hasPhoto         Boolean            @default(false)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
