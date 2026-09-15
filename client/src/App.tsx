@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { NavBar } from "./components/NavBar.js";
+import { Footer } from "./components/Footer.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { RecipesPage } from "./pages/RecipesPage.js";
 import { RecipeFormPage } from "./pages/RecipeFormPage.js";
@@ -20,7 +21,7 @@ export default function App() {
   if (isError || !user) return <LoginScreen />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <NavBar user={user} />
       <Routes>
         <Route path="/" element={<SharedRecipesPage />} />
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/friends/:id" element={<FriendActivityPage />} />
       </Routes>
+      <Footer />
     </div>
   );
 }
