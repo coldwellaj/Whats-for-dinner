@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import type { Recipe } from "../types.js";
 import { useToggleFavorite } from "../api/recipes.js";
 import { RecipePhoto } from "./RecipePhoto.js";
-import { TabbedCard } from "./TabbedCard.js";
 
 function lastMadeLabel(recipe: Recipe): string {
   if (recipe.daysSinceLastMade == null) return "Never made";
@@ -15,7 +14,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
   const toggleFavorite = useToggleFavorite();
 
   return (
-    <TabbedCard className="relative border rounded-lg bg-white flex flex-col shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="relative border rounded-lg bg-white flex flex-col shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <RecipePhoto recipeId={recipe.id} hasPhoto={recipe.hasPhoto} className="w-full h-36 object-cover" />
       <div className="flex flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
@@ -50,7 +49,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
           </div>
         )}
       </div>
-    </TabbedCard>
+    </div>
   );
 }
 

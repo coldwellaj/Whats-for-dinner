@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCopyRecipe, useSharedRecipes } from "../api/recipes.js";
 import { RecipePhoto } from "../components/RecipePhoto.js";
-import { TabbedCard } from "../components/TabbedCard.js";
 import { useViewMode, ViewModeToggle } from "../components/ViewModeToggle.js";
 import type { SharedRecipe } from "../types.js";
 
@@ -28,7 +27,7 @@ function SaveCopyButton({ recipe, className }: { recipe: SharedRecipe; className
 
 function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
   return (
-    <TabbedCard className="relative border rounded-lg bg-white flex flex-col shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="relative border rounded-lg bg-white flex flex-col shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <RecipePhoto recipeId={recipe.id} hasPhoto={recipe.hasPhoto} className="w-full h-36 object-cover" />
       <div className="flex flex-col gap-2 p-4">
         <Link to={`/shared/${recipe.id}`} className="font-semibold text-lg text-terracotta-800 hover:underline">
@@ -65,7 +64,7 @@ function SharedRecipeCard({ recipe }: { recipe: SharedRecipe }) {
           className="relative z-10 self-start mt-1 text-sm text-terracotta-700 hover:underline disabled:opacity-50"
         />
       </div>
-    </TabbedCard>
+    </div>
   );
 }
 
