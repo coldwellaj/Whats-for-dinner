@@ -59,7 +59,7 @@ export async function sendFamilyInviteEmail(
   const familyName = escapeHtml(opts.familyName);
   const href = opts.hasAccount ? `${APP_URL}/family` : `${APP_URL}/?signup=${encodeURIComponent(to)}`;
   const html = layout(
-    "Family invite",
+    "Household invite",
     `<strong>${invitedBy}</strong> invited you to join <strong>${familyName}</strong> on Rotisserie, sharing recipes, meal plans, and the shopping list.`,
     href,
     opts.hasAccount ? "View invite" : "Sign up to join"
