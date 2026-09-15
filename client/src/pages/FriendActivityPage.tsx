@@ -120,7 +120,21 @@ export function FriendActivityPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-gray-800">{profile.name ?? profile.email}</h1>
+      <div className="flex items-center gap-3">
+        {profile.picture ? (
+          <img
+            src={profile.picture}
+            alt=""
+            className="w-12 h-12 rounded-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-medium">
+            {(profile.name ?? profile.email)[0]?.toUpperCase()}
+          </div>
+        )}
+        <h1 className="text-2xl font-bold text-gray-800">{profile.name ?? profile.email}</h1>
+      </div>
 
       <section className="flex flex-col gap-2">
         <h2 className="font-semibold text-gray-800">Meal plan</h2>
