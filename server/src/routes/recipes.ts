@@ -156,6 +156,17 @@ recipesRouter.get("/", async (req, res) => {
   res.json(result);
 });
 
+// Finds the ids of shared recipes (from `sharedIds`) the caller already has a copy of in
+// their own scope, so Discover can show "already saved" instead of letting them copy twice.
+async function findAlreadySavedIds(req: Request, sharedIds: string[]): Promise<Set<string>> {
+  if (!sharedIds.length) return new Set();
+  const copies = await prisma.recipe.findMany({
+    where: { copiedFromId: { in: sharedIds }, ...scopeWhere(req) },
+    select: { copiedFromId: true },
+  });
+  return new Set(copies.map((c) => c.copiedFromId!));
+}
+
 // GET /api/recipes/shared?sort=popular|name — recipes other users/families have marked
 // shareable, excluding ones already in the caller's own scope. Registered before GET /:id
 // so "shared" isn't swallowed as an :id param.
@@ -172,7 +183,8 @@ recipesRouter.get("/shared", async (req, res) => {
     },
     orderBy,
   });
-  res.json(recipes);
+  const alreadySavedIds = await findAlreadySavedIds(req, recipes.map((r) => r.id));
+  res.json(recipes.map((r) => ({ ...r, alreadySaved: alreadySavedIds.has(r.id) })));
 });
 
 // GET /api/recipes/shared/:id — view a single shared recipe regardless of scope.
@@ -187,7 +199,8 @@ recipesRouter.get("/shared/:id", async (req, res) => {
     },
   });
   if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-  res.json(recipe);
+  const alreadySavedIds = await findAlreadySavedIds(req, [recipe.id]);
+  res.json({ ...recipe, alreadySaved: alreadySavedIds.has(recipe.id) });
 });
 
 // GET /api/recipes/:id/photo — serves the recipe's photo as a real image response, not
@@ -351,10 +364,16 @@ recipesRouter.post("/:id/copy", async (req, res) => {
   });
   if (!source) return res.status(404).json({ error: "Recipe not found" });
 
+  const existingCopy = await prisma.recipe.findFirst({
+    where: { copiedFromId: source.id, ...scopeWhere(req) },
+  });
+  if (existingCopy) return res.status(409).json({ error: "You already saved a copy of this recipe" });
+
   const copy = await prisma.recipe.create({
     data: {
       userId: req.userId,
       familyId: req.familyId,
+      copiedFromId: source.id,
       name: source.name,
       description: source.description,
       instructions: source.instructions,

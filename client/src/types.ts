@@ -44,6 +44,8 @@ export interface Recipe {
 export interface SharedRecipe extends Omit<Recipe, "lastMadeAt" | "daysSinceLastMade"> {
   user: { name: string | null; email: string };
   family: { name: string | null } | null;
+  /** Whether the caller already has a copy of this recipe in their own scope. */
+  alreadySaved: boolean;
 }
 
 export interface RecipeIngredientInput {

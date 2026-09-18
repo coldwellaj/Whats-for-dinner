@@ -103,6 +103,10 @@ model Recipe {
   isFavorite       Boolean            @default(false)
   isShared         Boolean            @default(false) // shareable: visible to any signed-in user via the Discover page
   saveCount        Int                @default(0) // times other users have copied this shared recipe; drives Discover's popularity sort
+  // Set on a recipe created via POST /:id/copy to the shared recipe it was copied from, so the
+  // copy route can detect "you already saved this" and Discover can show that state up front.
+  // Left in place even if the caller later un-shares or deletes their copy of the source.
+  copiedFromId     String?
   tags             String? // comma-separated for MVP
   // Photo bytes are deliberately excluded from every list/detail query (see recipes.ts) and
   // served instead via GET /:id/photo, so list responses (which can include dozens of
@@ -121,6 +125,7 @@ model Recipe {
   @@index([userId])
   @@index([familyId])
   @@index([isShared])
+  @@index([copiedFromId])
 }
 
 model Ingredient {

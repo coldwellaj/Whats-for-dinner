@@ -30,6 +30,8 @@ export function SharedRecipeDetailPage() {
   if (isLoading) return <p className="max-w-2xl mx-auto px-4 py-6 text-gray-500">Loading...</p>;
   if (error || !recipe) return <p className="max-w-2xl mx-auto px-4 py-6 text-red-600">Recipe not found.</p>;
 
+  const saved = recipe.alreadySaved || copyRecipe.isSuccess;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
       <RecipePhoto recipeId={recipe.id} hasPhoto={recipe.hasPhoto} className="w-full h-64 object-cover rounded-lg" />
@@ -106,10 +108,10 @@ export function SharedRecipeDetailPage() {
       <div className="flex gap-2 mt-2">
         <button
           onClick={() => copyRecipe.mutate(recipe.id)}
-          disabled={copyRecipe.isPending}
+          disabled={copyRecipe.isPending || saved}
           className="px-4 py-2 rounded-md text-sm bg-terracotta-600 text-white font-medium disabled:opacity-50"
         >
-          {copyRecipe.isSuccess ? "Saved to your recipes ✓" : "+ Save a copy"}
+          {saved ? "Saved to your recipes ✓" : "+ Save a copy"}
         </button>
       </div>
     </div>

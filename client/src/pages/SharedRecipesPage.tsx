@@ -18,9 +18,14 @@ function recipeTags(recipe: SharedRecipe): string[] {
 
 function SaveCopyButton({ recipe, className }: { recipe: SharedRecipe; className: string }) {
   const copyRecipe = useCopyRecipe();
+  const saved = recipe.alreadySaved || copyRecipe.isSuccess;
   return (
-    <button onClick={() => copyRecipe.mutate(recipe.id)} disabled={copyRecipe.isPending} className={className}>
-      {copyRecipe.isSuccess ? "Saved to your recipes ✓" : "+ Save a copy"}
+    <button
+      onClick={() => copyRecipe.mutate(recipe.id)}
+      disabled={copyRecipe.isPending || saved}
+      className={className}
+    >
+      {saved ? "Saved to your recipes ✓" : "+ Save a copy"}
     </button>
   );
 }
