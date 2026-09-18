@@ -21,8 +21,22 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_MIN_LENGTH = 8;
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
 export const authRouter = Router();
+
+type UsernameResult = { ok: true; value: string } | { ok: false; error: string };
+
+// Normalizes and validates a claimed username (lowercased, like email, so uniqueness is
+// effectively case-insensitive). Returns `ok: false` for anything that doesn't fit the
+// allowed shape — callers still need to check the unique constraint separately.
+function normalizeUsername(raw: string): UsernameResult {
+  const trimmed = raw.trim().toLowerCase();
+  if (!USERNAME_RE.test(trimmed)) {
+    return { ok: false, error: "Username must be 3-20 characters, using only letters, numbers, and underscores" };
+  }
+  return { ok: true, value: trimmed };
+}
 
 // Logs the user in. For a brand-new account only (isNewUser), also auto-resolves a
 // pending family invite for their email — signing up via that invite *is* their
@@ -43,9 +57,14 @@ async function finishLogin(res: Response, user: User, isNewUser: boolean) {
   res.json({ user: toUserJson(user) });
 }
 
-// POST /api/auth/signup  { email, password, name? }
+// POST /api/auth/signup  { email, password, name?, username? }
 authRouter.post("/signup", async (req, res) => {
-  const { email, password, name } = req.body as { email?: string; password?: string; name?: string };
+  const { email, password, name, username } = req.body as {
+    email?: string;
+    password?: string;
+    name?: string;
+    username?: string;
+  };
 
   if (!email || !EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "A valid email address is required" });
@@ -54,10 +73,24 @@ authRouter.post("/signup", async (req, res) => {
     return res.status(400).json({ error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters` });
   }
 
+  let normalizedUsername: string | null = null;
+  if (username?.trim()) {
+    const result = normalizeUsername(username);
+    if (!result.ok) return res.status(400).json({ error: result.error });
+    normalizedUsername = result.value;
+  }
+
   const normalizedEmail = email.trim().toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (existing) {
     return res.status(409).json({ error: "An account with that email already exists" });
+  }
+
+  if (normalizedUsername) {
+    const usernameTaken = await prisma.user.findUnique({ where: { username: normalizedUsername } });
+    if (usernameTaken) {
+      return res.status(409).json({ error: "That username is already taken" });
+    }
   }
 
   const user = await prisma.user.create({
@@ -65,6 +98,7 @@ authRouter.post("/signup", async (req, res) => {
       email: normalizedEmail,
       passwordHash: await hashPassword(password),
       name: name?.trim() || null,
+      username: normalizedUsername,
     },
   });
 
@@ -162,13 +196,17 @@ const MAX_PICTURE_BYTES = 500_000;
 // and enforces a hard ceiling server-side, since this endpoint can also be called directly.
 const PICTURE_DATA_URL_RE = /^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/]+=*)$/;
 
-// PUT /api/auth/me  { name?, picture? } — updates the caller's own display name and/or
-// profile picture. Either field may be omitted to leave it unchanged; picture may be set to
-// null to remove it.
+// PUT /api/auth/me  { name?, picture?, username? } — updates the caller's own display name,
+// profile picture, and/or username. Each field may be omitted to leave it unchanged; picture
+// and username may be set to null to remove them.
 authRouter.put("/me", requireAuth, async (req, res) => {
-  const { name, picture } = req.body as { name?: string | null; picture?: string | null };
+  const { name, picture, username } = req.body as {
+    name?: string | null;
+    picture?: string | null;
+    username?: string | null;
+  };
 
-  const data: { name?: string | null; picture?: string | null } = {};
+  const data: { name?: string | null; picture?: string | null; username?: string | null } = {};
 
   if (name !== undefined) {
     const trimmed = (name ?? "").trim();
@@ -194,10 +232,31 @@ authRouter.put("/me", requireAuth, async (req, res) => {
     }
   }
 
+  if (username !== undefined) {
+    if (username === null || !username.trim()) {
+      data.username = null;
+    } else {
+      const result = normalizeUsername(username);
+      if (!result.ok) return res.status(400).json({ error: result.error });
+      const usernameTaken = await prisma.user.findUnique({ where: { username: result.value } });
+      if (usernameTaken && usernameTaken.id !== req.userId) {
+        return res.status(409).json({ error: "That username is already taken" });
+      }
+      data.username = result.value;
+    }
+  }
+
   const user = await prisma.user.update({ where: { id: req.userId }, data });
   res.json({ user: toUserJson(user) });
 });
 
-function toUserJson(user: { id: string; email: string; name: string | null; picture: string | null; familyId: string | null }) {
-  return { id: user.id, email: user.email, name: user.name, picture: user.picture, familyId: user.familyId };
+function toUserJson(user: {
+  id: string;
+  email: string;
+  name: string | null;
+  picture: string | null;
+  username: string | null;
+  familyId: string | null;
+}) {
+  return { id: user.id, email: user.email, name: user.name, picture: user.picture, username: user.username, familyId: user.familyId };
 }

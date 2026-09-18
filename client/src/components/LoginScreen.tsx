@@ -18,6 +18,7 @@ export function LoginScreen() {
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
 
   const emailMutation = mode === "login" ? emailLogin : emailSignup;
 
@@ -26,7 +27,7 @@ export function LoginScreen() {
     if (mode === "login") {
       emailLogin.mutate({ email, password });
     } else {
-      emailSignup.mutate({ email, password, name: name || undefined });
+      emailSignup.mutate({ email, password, name: name || undefined, username: username || undefined });
     }
   }
 
@@ -53,6 +54,18 @@ export function LoginScreen() {
               onChange={(e) => setName(e.target.value)}
               className="border rounded-md px-3 py-2 text-base sm:text-sm w-full"
               autoComplete="name"
+            />
+          )}
+          {mode === "signup" && (
+            <input
+              type="text"
+              placeholder="Username (optional)"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="border rounded-md px-3 py-2 text-base sm:text-sm w-full"
+              autoComplete="username"
+              minLength={3}
+              maxLength={20}
             />
           )}
           <input

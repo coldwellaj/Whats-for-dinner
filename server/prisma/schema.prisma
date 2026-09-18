@@ -16,6 +16,9 @@ model User {
   googleId     String?  @unique
   passwordHash String?
   email        String   @unique
+  // Stored lowercased (like email) so uniqueness is effectively case-insensitive; optional —
+  // Postgres unique constraints allow any number of NULLs, so users without one don't collide.
+  username     String?  @unique
   name         String?
   picture      String?
   createdAt    DateTime @default(now())

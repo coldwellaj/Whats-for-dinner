@@ -6,6 +6,7 @@ export interface CurrentUser {
   email: string;
   name: string | null;
   picture: string | null;
+  username: string | null;
   familyId: string | null;
 }
 
@@ -31,6 +32,7 @@ export interface EmailCredentials {
   email: string;
   password: string;
   name?: string;
+  username?: string;
 }
 
 export function useEmailSignup() {
@@ -57,7 +59,7 @@ export function useEmailLogin() {
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; picture?: string | null }) =>
+    mutationFn: (data: { name?: string; picture?: string | null; username?: string | null }) =>
       api.put<{ user: CurrentUser }>("/auth/me", data),
     onSuccess: ({ user }) => {
       queryClient.setQueryData(["auth", "me"], user);

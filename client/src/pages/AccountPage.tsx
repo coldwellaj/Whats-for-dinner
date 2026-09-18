@@ -1,10 +1,90 @@
 import { useEffect, useState } from "react";
-import { useCurrentUser, useUpdateProfile } from "../api/auth.js";
+import { useCurrentUser, useUpdateProfile, type CurrentUser } from "../api/auth.js";
 import { resizeImageToDataUrl } from "../lib/images.js";
 
 const AVATAR_MAX_DIMENSION = 256;
 const AVATAR_JPEG_QUALITY = 0.85;
 const MAX_SOURCE_FILE_BYTES = 10_000_000;
+
+// Its own form + mutation, separate from the name/picture form below, so claiming or
+// updating a username doesn't share pending/error state with the rest of the profile.
+function UsernameSection({ user }: { user: CurrentUser }) {
+  const updateProfile = useUpdateProfile();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(user.username ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  function startEditing() {
+    setValue(user.username ?? "");
+    setError(null);
+    updateProfile.reset();
+    setEditing(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    try {
+      await updateProfile.mutateAsync({ username: value.trim() });
+      setEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save username");
+    }
+  }
+
+  if (!editing) {
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-gray-700">Username</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-gray-600">{user.username ? `@${user.username}` : "No username set"}</span>
+          <button
+            type="button"
+            onClick={startEditing}
+            className="text-sm text-terracotta-700 hover:underline shrink-0"
+          >
+            {user.username ? "Update username" : "Claim a username"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-1">
+      <span className="text-sm font-medium text-gray-700">Username</span>
+      <div className="flex gap-2">
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="username"
+          minLength={3}
+          maxLength={20}
+          pattern="[a-zA-Z0-9_]+"
+          title="3-20 characters: letters, numbers, and underscores only"
+          required
+          autoFocus
+          className="border rounded px-3 py-2 text-base sm:text-sm flex-1"
+        />
+        <button
+          type="submit"
+          disabled={updateProfile.isPending}
+          className="bg-terracotta-600 text-white px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 shrink-0"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          className="px-3 py-2 rounded-md text-sm text-gray-500 hover:text-gray-700 shrink-0"
+        >
+          Cancel
+        </button>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </form>
+  );
+}
 
 export function AccountPage() {
   const { data: user } = useCurrentUser();
@@ -148,6 +228,10 @@ export function AccountPage() {
           Save changes
         </button>
       </form>
+
+      <div className="bg-white border rounded-lg p-4">
+        <UsernameSection user={user} />
+      </div>
     </div>
   );
 }
