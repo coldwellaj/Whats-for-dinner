@@ -5,6 +5,7 @@ import type {
   FriendProfile,
   FriendRequestIncoming,
   FriendRequestOutgoing,
+  FriendSearchResult,
   MealPlanEntry,
   PrivacySettings,
   Recipe,
@@ -42,10 +43,22 @@ export function useFriendRequests() {
 export function useSendFriendRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (email: string) => api.post<{ status: "requested" | "accepted" }>("/friends/requests", { email }),
+    mutationFn: (username: string) =>
+      api.post<{ status: "requested" | "accepted" }>("/friends/requests", { username }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friends"] });
     },
+  });
+}
+
+// Typeahead suggestions for the "Add a friend" search box. Callers should only enable this
+// once the query has a couple characters — see FriendsPage's debounced usage.
+export function useFriendSearch(query: string) {
+  const trimmed = query.trim();
+  return useQuery({
+    queryKey: ["friends", "search", trimmed],
+    queryFn: () => api.get<FriendSearchResult[]>(`/friends/search?q=${encodeURIComponent(trimmed)}`),
+    enabled: trimmed.length >= 2,
   });
 }
 

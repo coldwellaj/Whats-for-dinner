@@ -103,6 +103,14 @@ export interface Friend extends FriendProfile {
   friendshipId: string;
 }
 
+/** A typeahead match from the "Add a friend" username search. */
+export interface FriendSearchResult {
+  id: string;
+  username: string;
+  name: string | null;
+  picture: string | null;
+}
+
 export interface FriendRequestIncoming {
   id: string;
   from: FriendProfile;

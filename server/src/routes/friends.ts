@@ -73,15 +73,35 @@ friendsRouter.get("/requests", async (req, res) => {
   });
 });
 
-// POST /api/friends/requests  { email } — send a friend request. Auto-accepts if the
-// target already sent the caller a pending request, instead of leaving two stuck rows.
-friendsRouter.post("/requests", async (req, res) => {
-  const { email } = req.body as { email?: string };
-  const normalizedEmail = email?.trim().toLowerCase();
-  if (!normalizedEmail) return res.status(400).json({ error: "email is required" });
+const FRIEND_SEARCH_LIMIT = 8;
 
-  const target = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (!target) return res.status(404).json({ error: "No user found with that email" });
+// GET /api/friends/search?q=<partial username> — typeahead suggestions for the "Add a
+// friend" search box. Matches by username prefix (usernames are stored lowercased, see
+// auth.ts's normalizeUsername), excludes the caller, and never returns email — this is
+// visible to any signed-in user who types a matching prefix. Registered before the
+// `/:userId/...` routes below so "search" isn't swallowed as a userId param.
+friendsRouter.get("/search", async (req, res) => {
+  const q = (req.query.q as string | undefined)?.trim().toLowerCase().replace(/^@/, "");
+  if (!q) return res.json([]);
+
+  const users = await prisma.user.findMany({
+    where: { username: { startsWith: q }, id: { not: req.userId } },
+    select: { id: true, username: true, name: true, picture: true },
+    orderBy: { username: "asc" },
+    take: FRIEND_SEARCH_LIMIT,
+  });
+  res.json(users);
+});
+
+// POST /api/friends/requests  { username } — send a friend request by username. Auto-accepts
+// if the target already sent the caller a pending request, instead of leaving two stuck rows.
+friendsRouter.post("/requests", async (req, res) => {
+  const { username } = req.body as { username?: string };
+  const normalizedUsername = username?.trim().toLowerCase().replace(/^@/, "");
+  if (!normalizedUsername) return res.status(400).json({ error: "username is required" });
+
+  const target = await prisma.user.findUnique({ where: { username: normalizedUsername } });
+  if (!target) return res.status(404).json({ error: "No user found with that username" });
   if (target.id === req.userId) return res.status(400).json({ error: "You can't friend yourself" });
 
   const existing = await prisma.friendship.findFirst({

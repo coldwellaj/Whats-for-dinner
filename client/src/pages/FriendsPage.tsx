@@ -1,15 +1,90 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   useAcceptFriendRequest,
   useFriendRequests,
   useFriends,
+  useFriendSearch,
   usePrivacySettings,
   useRemoveFriendship,
   useSendFriendRequest,
   useUpdatePrivacySettings,
 } from "../api/friends.js";
-import type { PrivacySettings, Visibility } from "../types.js";
+import type { FriendSearchResult, PrivacySettings, Visibility } from "../types.js";
+
+const SEARCH_DEBOUNCE_MS = 250;
+
+// Debounced typeahead input for the "Add a friend" username search — a plain text input plus
+// a dropdown of matches that appears while typing. Selecting a suggestion (mousedown, so the
+// input doesn't blur and close the dropdown before the click registers) just fills the field;
+// sending the request is still the form's job so both paths share one success/error message.
+function UsernameSearchInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled: boolean;
+}) {
+  const [debounced, setDebounced] = useState(value);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  const { data: suggestions } = useFriendSearch(debounced);
+  const showDropdown = open && !!suggestions?.length;
+
+  function selectSuggestion(user: FriendSearchResult) {
+    onChange(user.username);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={containerRef} className="relative flex-1 min-w-[10rem]">
+      <input
+        type="text"
+        placeholder="Add by username..."
+        value={value}
+        disabled={disabled}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="w-full border rounded px-3 py-2 text-base sm:text-sm disabled:opacity-50"
+        autoComplete="off"
+      />
+      {showDropdown && (
+        <ul className="absolute z-10 mt-1 w-full bg-white border rounded shadow-md max-h-56 overflow-y-auto">
+          {suggestions!.map((u) => (
+            <li key={u.id}>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectSuggestion(u);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+              >
+                {u.picture && (
+                  <img src={u.picture} alt="" className="w-5 h-5 rounded-full shrink-0" referrerPolicy="no-referrer" />
+                )}
+                <span className="text-gray-700">@{u.username}</span>
+                {u.name && <span className="text-gray-400 truncate">{u.name}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const VISIBILITY_OPTIONS: { value: Visibility; label: string }[] = [
   { value: "ALL", label: "Show to all" },
@@ -57,18 +132,18 @@ export function FriendsPage() {
   const removeFriendship = useRemoveFriendship();
   const updatePrivacy = useUpdatePrivacySettings();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
 
   async function handleSendRequest(e: React.FormEvent) {
     e.preventDefault();
     setRequestMessage(null);
-    const trimmed = email.trim();
+    const trimmed = username.trim().replace(/^@/, "");
     if (!trimmed) return;
     try {
       const result = await sendRequest.mutateAsync(trimmed);
-      setRequestMessage(result.status === "accepted" ? `You and ${trimmed} are now friends!` : "Friend request sent.");
-      setEmail("");
+      setRequestMessage(result.status === "accepted" ? `You and @${trimmed} are now friends!` : "Friend request sent.");
+      setUsername("");
     } catch (err) {
       setRequestMessage(err instanceof Error ? err.message : "Failed to send request");
     }
@@ -85,13 +160,7 @@ export function FriendsPage() {
       <section className="flex flex-col gap-2">
         <h2 className="font-semibold text-gray-800">Add a friend</h2>
         <form onSubmit={handleSendRequest} className="flex gap-2 flex-wrap">
-          <input
-            type="email"
-            placeholder="Add by email..."
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 min-w-[10rem] border rounded px-3 py-2 text-base sm:text-sm"
-          />
+          <UsernameSearchInput value={username} onChange={setUsername} disabled={sendRequest.isPending} />
           <button
             type="submit"
             disabled={sendRequest.isPending}
