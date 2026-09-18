@@ -1,6 +1,7 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
-import { useCreateMealPlanEntry, useDeleteMealPlanEntry, useMealPlan, useUpdateMealPlanEntry } from "../api/mealPlan.js";
+import { useDeleteMealPlanEntry, useMealPlan, useUpdateMealPlanEntry } from "../api/mealPlan.js";
+import { MealCustomizeModal, type MealCustomizeTarget } from "../components/MealCustomizeModal.js";
 import { RecipePicker } from "../components/RecipePicker.js";
 import { addDays, currentWeekStart, formatDayLabel, formatWeekRangeLabel } from "../lib/dates.js";
 import type { MealPlanEntry, MealPlanStatus, MealType } from "../types.js";
@@ -19,9 +20,10 @@ const STATUS_STYLES: Record<MealPlanStatus, string> = {
   SKIPPED: "bg-gray-100 text-gray-400 line-through",
 };
 
-function MealEntryPill({ entry }: { entry: MealPlanEntry }) {
+function MealEntryPill({ entry, onCustomize }: { entry: MealPlanEntry; onCustomize: () => void }) {
   const updateEntry = useUpdateMealPlanEntry();
   const deleteEntry = useDeleteMealPlanEntry();
+  const isCustomized = entry.hasCustomIngredients || entry.servings != null;
 
   function cycleStatus() {
     const next: Record<MealPlanStatus, MealPlanStatus> = {
@@ -39,6 +41,10 @@ function MealEntryPill({ entry }: { entry: MealPlanEntry }) {
           {entry.recipe.isFavorite ? "❤️ " : ""}
           {entry.recipe.name}
         </Link>
+        {isCustomized && <span title="Customized for this meal"> ✎</span>}
+      </button>
+      <button onClick={onCustomize} className="text-gray-400 hover:text-terracotta-600 px-1 -my-1 py-1" title="Customize amount/ingredients">
+        ⚙
       </button>
       <button onClick={() => deleteEntry.mutate(entry.id)} className="text-gray-400 hover:text-red-500 px-1 -my-1 py-1">
         ×
@@ -50,11 +56,10 @@ function MealEntryPill({ entry }: { entry: MealPlanEntry }) {
 export function MealPlanPage() {
   const [weekStart, setWeekStart] = useState(currentWeekStart());
   const [pickerTarget, setPickerTarget] = useState<{ date: string; mealType: MealType } | null>(null);
+  const [customizeTarget, setCustomizeTarget] = useState<MealCustomizeTarget | null>(null);
 
   const weekEnd = addDays(weekStart, 7);
   const { data: entries, isLoading } = useMealPlan(weekStart, weekEnd);
-  const createEntry = useCreateMealPlanEntry();
-  const isSelectingRecipe = useRef(false);
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -62,18 +67,12 @@ export function MealPlanPage() {
     return entries?.filter((e) => e.date.slice(0, 10) === date && e.mealType === mealType) ?? [];
   }
 
-  async function handleSelectRecipe(recipeId: string) {
-    // Guards against a duplicate entry being created if the picker registers two selections
-    // (double click, or a second click before the first mutation's pending state re-renders
-    // the picker's disabled buttons) before the first mutateAsync resolves.
-    if (!pickerTarget || isSelectingRecipe.current) return;
-    isSelectingRecipe.current = true;
-    try {
-      await createEntry.mutateAsync({ date: pickerTarget.date, mealType: pickerTarget.mealType, recipeId });
-      setPickerTarget(null);
-    } finally {
-      isSelectingRecipe.current = false;
-    }
+  // Picking a recipe doesn't add it right away — it hands off into the customize popup
+  // (servings + ingredients), which is what actually creates the entry on save.
+  function handleSelectRecipe(recipeId: string) {
+    if (!pickerTarget) return;
+    setCustomizeTarget({ mode: "create", date: pickerTarget.date, mealType: pickerTarget.mealType, recipeId });
+    setPickerTarget(null);
   }
 
   return (
@@ -111,7 +110,11 @@ export function MealPlanPage() {
               {days.map((day) => (
                 <div key={`${mealType}-${day}`} className="border rounded-md p-1.5 bg-white min-h-[4rem] flex flex-col gap-1">
                   {entriesFor(day, mealType).map((entry) => (
-                    <MealEntryPill key={entry.id} entry={entry} />
+                    <MealEntryPill
+                      key={entry.id}
+                      entry={entry}
+                      onCustomize={() => setCustomizeTarget({ mode: "edit", entryId: entry.id })}
+                    />
                   ))}
                   <button
                     onClick={() => setPickerTarget({ date: day, mealType })}
@@ -126,13 +129,9 @@ export function MealPlanPage() {
         </div>
       </div>
 
-      {pickerTarget && (
-        <RecipePicker
-          onSelect={handleSelectRecipe}
-          onClose={() => setPickerTarget(null)}
-          disabled={createEntry.isPending}
-        />
-      )}
+      {pickerTarget && <RecipePicker onSelect={handleSelectRecipe} onClose={() => setPickerTarget(null)} />}
+
+      {customizeTarget && <MealCustomizeModal target={customizeTarget} onClose={() => setCustomizeTarget(null)} />}
     </div>
   );
 }

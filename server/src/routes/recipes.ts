@@ -1,5 +1,6 @@
 import { Router, type Request } from "express";
 import { prisma, Prisma } from "../db.js";
+import { findOrCreateIngredient, type IngredientInput } from "../lib/ingredients.js";
 import { getLastMadeForRecipe, getLastMadeForRecipes } from "../lib/lastMade.js";
 import { scopeWhere } from "../middleware/requireAuth.js";
 
@@ -19,19 +20,13 @@ function excludeOwnScope(req: Request) {
 
 export const recipesRouter = Router();
 
-type IngredientInput = {
-  name: string;
-  quantity?: number | null;
-  unit?: string | null;
-  notes?: string | null;
-};
-
 // Every recipe query that gets sent to the client (list, detail, or a mutation's response)
 // must select fields explicitly rather than `include` (which pulls in every scalar column,
 // including the photo bytes — see the schema comment on Recipe.photo). This project pins
 // Prisma 5.x, whose generated client predates the (later-GA) Omit API, so explicit `select`
-// is the safe way to exclude a column on this version rather than `include` + `omit`.
-const RECIPE_SELECT_BASE = {
+// is the safe way to exclude a column on this version rather than `include` + `omit`. Exported
+// for reuse anywhere else a recipe gets embedded in a response — see mealPlan.ts.
+export const RECIPE_SELECT_BASE = {
   id: true,
   userId: true,
   familyId: true,
@@ -78,26 +73,6 @@ function resolvePhotoUpdate(photo: string | null | undefined): PhotoUpdateResult
   const parsed = parsePhoto(photo);
   if (!parsed.ok) return { kind: "error", error: parsed.error };
   return { kind: "set", data: { photo: parsed.buffer, photoType: parsed.mimeType, hasPhoto: true } };
-}
-
-// Finds or creates the shared Ingredient row for a name. `upsert` alone isn't safe here:
-// two requests creating a recipe with the same brand-new ingredient name can both miss the
-// SELECT and then race on the INSERT, so the loser's upsert throws a P2002 unique-constraint
-// error instead of falling back to the row the winner just created. Catch that one case and
-// re-fetch instead of letting it propagate.
-async function findOrCreateIngredient(name: string, defaultUnit: string | null) {
-  try {
-    return await prisma.ingredient.upsert({
-      where: { name },
-      update: {},
-      create: { name, defaultUnit },
-    });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      return prisma.ingredient.findUniqueOrThrow({ where: { name } });
-    }
-    throw err;
-  }
 }
 
 async function upsertIngredientsForRecipe(recipeId: string, ingredients: IngredientInput[]) {

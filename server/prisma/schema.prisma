@@ -132,11 +132,12 @@ model Recipe {
 }
 
 model Ingredient {
-  id                String             @id @default(cuid())
-  name              String             @unique
-  defaultUnit       String?
-  recipeIngredients RecipeIngredient[]
-  shoppingListItems ShoppingListItem[]
+  id                       String                    @id @default(cuid())
+  name                     String                    @unique
+  defaultUnit              String?
+  recipeIngredients        RecipeIngredient[]
+  mealPlanEntryIngredients MealPlanEntryIngredient[]
+  shoppingListItems        ShoppingListItem[]
 }
 
 model RecipeIngredient {
@@ -154,22 +155,51 @@ model RecipeIngredient {
 }
 
 model MealPlanEntry {
-  id        String   @id @default(cuid())
-  userId    String
-  familyId  String?
-  date      DateTime
-  mealType  String
-  recipeId  String
-  status    String   @default("PLANNED")
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  family    Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  userId   String
+  familyId String?
+  date     DateTime
+  mealType String
+  recipeId String
+  status   String @default("PLANNED")
+  // Per-occurrence override of the recipe's default `servings`, e.g. "I'm doubling this
+  // recipe just for tonight." Null means follow the recipe's own servings. When there's no
+  // per-entry ingredient customization (see hasCustomIngredients below), the shopping list
+  // scales the recipe's own ingredient quantities by (servings / recipe.servings) rather than
+  // requiring a full ingredient snapshot just to change a serving count.
+  servings Int?
+  // True once this entry has its own ingredient list (customIngredients) that overrides the
+  // recipe's, e.g. after removing/substituting/adding an ingredient just for this occurrence.
+  // False means this entry has no customIngredients rows and just follows the recipe's
+  // ingredients live (like before this field existed) — the common case.
+  hasCustomIngredients Boolean                   @default(false)
+  createdAt            DateTime                  @default(now())
+  user                 User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family               Family?                   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  recipe               Recipe                    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  customIngredients    MealPlanEntryIngredient[]
 
   @@index([userId])
   @@index([familyId])
   @@index([recipeId])
   @@index([date])
+}
+
+// A per-occurrence ingredient override, only present once a MealPlanEntry is customized
+// (see MealPlanEntry.hasCustomIngredients) — mirrors RecipeIngredient's shape exactly, but
+// scoped to a single meal-plan entry instead of the shared Recipe.
+model MealPlanEntryIngredient {
+  id              String        @id @default(cuid())
+  mealPlanEntryId String
+  ingredientId    String
+  quantity        Float?
+  unit            String?
+  notes           String?
+  mealPlanEntry   MealPlanEntry @relation(fields: [mealPlanEntryId], references: [id], onDelete: Cascade)
+  ingredient      Ingredient    @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([mealPlanEntryId])
+  @@index([ingredientId])
 }
 
 model ShoppingListItem {

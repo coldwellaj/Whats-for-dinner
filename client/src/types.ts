@@ -75,6 +75,10 @@ export interface MealPlanEntry {
   mealType: MealType;
   recipeId: string;
   status: MealPlanStatus;
+  // Per-occurrence overrides — null/false mean this entry just follows the recipe as written.
+  // See the schema comment on MealPlanEntry for how these feed into the shopping list.
+  servings: number | null;
+  hasCustomIngredients: boolean;
   recipe: RecipeSummary;
 }
 
@@ -82,6 +86,29 @@ export interface RecipeSummary {
   id: string;
   name: string;
   isFavorite: boolean;
+}
+
+export interface MealPlanEntryIngredient {
+  id: string;
+  ingredientId: string;
+  quantity: number | null;
+  unit: string | null;
+  notes: string | null;
+  ingredient: Ingredient;
+}
+
+/** Full detail for one meal-plan entry: the recipe's own ingredients plus this entry's own
+ * customization (if any) — used by the "customize this meal" popup. */
+export interface MealPlanEntryDetail {
+  id: string;
+  date: string;
+  mealType: MealType;
+  recipeId: string;
+  status: MealPlanStatus;
+  servings: number | null;
+  hasCustomIngredients: boolean;
+  recipe: Omit<Recipe, "lastMadeAt" | "daysSinceLastMade">;
+  customIngredients: MealPlanEntryIngredient[];
 }
 
 export type Visibility = "ALL" | "FRIENDS" | "PRIVATE";

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "cleanup:test-data": "tsx prisma/cleanup-test-data.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
