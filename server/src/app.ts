@@ -13,13 +13,17 @@ import { requireAuth } from "./middleware/requireAuth.js";
 
 export const app = express();
 
-// The web client reaches the API through a same-origin Vercel rewrite and sends no Origin
-// header worth checking. The native (Capacitor) app bundle calls the API directly from its
-// own origin, so it needs to be explicitly allowlisted here (and to receive the session
-// cookie, credentials: true) — see CORS_ORIGINS in .env.example.
+// Browsers attach an Origin header even to same-origin POST/PUT/DELETE requests (not just
+// cross-origin ones), so the web client's origin needs to be allowlisted here too, even though
+// it reaches the API through a same-origin Vercel rewrite — set it via CORS_ORIGINS in
+// production. The native (Capacitor) app bundle calls the API directly from its own origin,
+// so its origins are allowlisted by default below (and it needs credentials: true, to receive
+// the session cookie). localhost:5173 (the Vite dev server) is also allowlisted by default so
+// local dev works without extra setup.
 const defaultAllowedOrigins = [
   "capacitor://localhost", // iOS
   "https://localhost", // Android (Capacitor's default androidScheme)
+  "http://localhost:5173", // Vite dev server (client/vite.config.ts)
 ];
 const configuredAllowedOrigins = (process.env.CORS_ORIGINS ?? "")
   .split(",")
