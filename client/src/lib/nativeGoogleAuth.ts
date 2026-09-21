@@ -31,9 +31,14 @@ function initNativeGoogleAuth(): Promise<void> {
 // useGoogleLogin() mutation (POST /api/auth/google) the web GoogleLogin button already uses.
 export async function nativeGoogleSignIn(): Promise<string> {
   await initNativeGoogleAuth();
+  // Don't pass custom `scopes` here: the plugin already requests email/profile/openid by
+  // default, which is all this app needs. Passing scopes explicitly switches Android onto an
+  // authorization-code flow that requires MainActivity to implement a plugin-specific
+  // interface to receive its activity result — unnecessary complexity for scopes we already
+  // get for free.
   const { result } = await SocialLogin.login({
     provider: "google",
-    options: { scopes: ["email", "profile"] },
+    options: {},
   });
   if (result.responseType !== "online" || !result.idToken) {
     throw new Error("Google sign-in did not return a token");
