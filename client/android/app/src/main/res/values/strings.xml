@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">What\'s for Dinner?</string>
+    <string name="title_activity_main">What\'s for Dinner?</string>
+    <string name="package_name">com.rotisserieapp.whatsfordinner</string>
+    <string name="custom_url_scheme">com.rotisserieapp.whatsfordinner</string>
+</resources>

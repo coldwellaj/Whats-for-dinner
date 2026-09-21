@@ -13,7 +13,32 @@ import { requireAuth } from "./middleware/requireAuth.js";
 
 export const app = express();
 
-app.use(cors());
+// The web client reaches the API through a same-origin Vercel rewrite and sends no Origin
+// header worth checking. The native (Capacitor) app bundle calls the API directly from its
+// own origin, so it needs to be explicitly allowlisted here (and to receive the session
+// cookie, credentials: true) — see CORS_ORIGINS in .env.example.
+const defaultAllowedOrigins = [
+  "capacitor://localhost", // iOS
+  "https://localhost", // Android (Capacitor's default androidScheme)
+];
+const configuredAllowedOrigins = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = [...defaultAllowedOrigins, ...configuredAllowedOrigins];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
 // Default 100kb is too small for a picture/photo data URL. The largest payload is a recipe
 // photo (recipes.ts caps the decoded image at 1.5MB); this gives the base64 + JSON overhead
 // room to arrive with headroom to spare.

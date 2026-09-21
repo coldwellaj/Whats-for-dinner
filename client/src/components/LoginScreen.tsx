@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { useEmailLogin, useEmailSignup, useGoogleLogin } from "../api/auth.js";
+import { isNativePlatform, nativeGoogleSignIn } from "../lib/nativeGoogleAuth.js";
 import { Logo } from "./Logo.js";
 
 export function LoginScreen() {
@@ -21,6 +22,21 @@ export function LoginScreen() {
   const [username, setUsername] = useState("");
 
   const emailMutation = mode === "login" ? emailLogin : emailSignup;
+
+  const [nativeGoogleError, setNativeGoogleError] = useState(false);
+
+  async function handleNativeGoogleSignIn() {
+    setNativeGoogleError(false);
+    try {
+      const idToken = await nativeGoogleSignIn();
+      googleLogin.mutate(idToken);
+    } catch (err) {
+      // The user dismissing the native account picker isn't a real error worth surfacing.
+      if ((err as { code?: string } | null)?.code !== "USER_CANCELLED") {
+        setNativeGoogleError(true);
+      }
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,15 +130,26 @@ export function LoginScreen() {
           <div className="flex-1 h-px bg-gray-200" />
         </div>
 
-        <GoogleLogin
-          onSuccess={(credentialResponse) => {
-            if (credentialResponse.credential) {
-              googleLogin.mutate(credentialResponse.credential);
-            }
-          }}
-          onError={() => googleLogin.reset()}
-        />
-        {googleLogin.isError && (
+        {isNativePlatform ? (
+          <button
+            type="button"
+            onClick={handleNativeGoogleSignIn}
+            disabled={googleLogin.isPending}
+            className="border rounded-md px-3 py-2 w-full text-sm font-medium text-gray-700 disabled:opacity-60"
+          >
+            {googleLogin.isPending ? "Please wait…" : "Sign in with Google"}
+          </button>
+        ) : (
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              if (credentialResponse.credential) {
+                googleLogin.mutate(credentialResponse.credential);
+              }
+            }}
+            onError={() => googleLogin.reset()}
+          />
+        )}
+        {(googleLogin.isError || nativeGoogleError) && (
           <p className="text-sm text-red-600">Sign-in failed. Please try again.</p>
         )}
       </div>

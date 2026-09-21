@@ -37,7 +37,11 @@ export const sessionCookieOptions = {
   httpOnly: true,
   // Secure cookies are dropped by browsers over plain http, which local dev uses.
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  // The web client reaches the API through a same-origin Vercel rewrite, so "lax" is enough
+  // there. The native (Capacitor) app bundle is served from its own origin and calls the API
+  // cross-origin, which requires "none" — that only works paired with Secure, so it's gated
+  // the same way, and dev keeps "lax" since local http can't use Secure cookies at all.
+  sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
   maxAge: SESSION_MAX_AGE_MS,
   path: "/",
 };
