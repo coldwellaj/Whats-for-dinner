@@ -1,7 +1,8 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar.js";
 import { Footer } from "./components/Footer.js";
 import { LoginScreen } from "./components/LoginScreen.js";
+import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage.js";
 import { RecipesPage } from "./pages/RecipesPage.js";
 import { RecipeFormPage } from "./pages/RecipeFormPage.js";
 import { RecipeDetailPage } from "./pages/RecipeDetailPage.js";
@@ -17,6 +18,12 @@ import { useCurrentUser } from "./api/auth.js";
 
 export default function App() {
   const { data: user, isLoading, isError } = useCurrentUser();
+  const location = useLocation();
+
+  // Public, unauthenticated route — kept ahead of the login gate below so it can be linked
+  // from the Google OAuth consent screen configuration, which requires a live URL that
+  // doesn't require signing in to view.
+  if (location.pathname === "/privacy") return <PrivacyPolicyPage />;
 
   if (isLoading) return null;
   if (isError || !user) return <LoginScreen />;

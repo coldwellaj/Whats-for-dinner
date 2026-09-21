@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const SUGGESTION_FORM_URL = "https://forms.gle/w9jk5jhJGbsZ777P6";
 
 export function Footer() {
@@ -7,14 +9,19 @@ export function Footer() {
         <p>
           &copy; {new Date().getFullYear()} Rotisserie — Keeping your meals on rotation
         </p>
-        <a
-          href={SUGGESTION_FORM_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="text-terracotta-600 hover:underline"
-        >
-          Got a suggestion?
-        </a>
+        <div className="flex items-center gap-4">
+          <Link to="/privacy" className="text-terracotta-600 hover:underline">
+            Privacy Policy
+          </Link>
+          <a
+            href={SUGGESTION_FORM_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-terracotta-600 hover:underline"
+          >
+            Got a suggestion?
+          </a>
+        </div>
       </div>
     </footer>
   );

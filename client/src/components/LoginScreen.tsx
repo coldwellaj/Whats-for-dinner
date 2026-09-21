@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { useEmailLogin, useEmailSignup, useGoogleLogin } from "../api/auth.js";
 import { isNativePlatform, nativeGoogleSignIn } from "../lib/nativeGoogleAuth.js";
@@ -152,6 +152,10 @@ export function LoginScreen() {
         {(googleLogin.isError || nativeGoogleError) && (
           <p className="text-sm text-red-600">Sign-in failed. Please try again.</p>
         )}
+
+        <Link to="/privacy" className="text-xs text-gray-400 hover:underline">
+          Privacy Policy
+        </Link>
       </div>
     </div>
   );
